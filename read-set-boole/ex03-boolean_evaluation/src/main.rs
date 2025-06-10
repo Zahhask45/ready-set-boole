@@ -90,8 +90,8 @@ fn evaluate(node: &Node) -> bool {
                 Conjunction => res = left & right,
                 Disjunction => res = left | right,
                 ExclusiveDisjunction => res = left ^ right,
-                MaterialCondition => res = left, // TODO
-                LogicalEquivalence => res = left, // TODO
+                MaterialCondition => res = !left | right,
+                LogicalEquivalence => res = !(left ^ right),
                 Negation => panic!("Should not enter here"),
                 
             }
@@ -106,6 +106,14 @@ fn eval_formula(formula: &str) -> bool{
 }
 
 fn main() {
-    println!("Damn: {}", eval_formula("101|&"));
-    // println!("Damn: {}", eval_formula("10|"));
+    println!("{}", eval_formula("10&"));
+    // false
+    println!("{}", eval_formula("10|"));
+    // true
+    println!("{}", eval_formula("11>"));
+    // true
+    println!("{}", eval_formula("10="));
+    // false
+    println!("{}", eval_formula("1011||="));
+    // true
 }
