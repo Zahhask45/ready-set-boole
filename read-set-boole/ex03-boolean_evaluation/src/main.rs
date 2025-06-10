@@ -106,14 +106,21 @@ fn eval_formula(formula: &str) -> bool{
 }
 
 fn main() {
+    let f = false;
+    let t = true;
     println!("{}", eval_formula("10&"));
+    assert_eq!(eval_formula("10&"), f);
     // false
     println!("{}", eval_formula("10|"));
+    assert_eq!(eval_formula("10|"), t);
     // true
     println!("{}", eval_formula("11>"));
+    assert_eq!(eval_formula("11>"), t);
     // true
     println!("{}", eval_formula("10="));
+    assert_eq!(eval_formula("10="), f);
     // false
     println!("{}", eval_formula("1011||="));
+    assert_eq!(eval_formula("1011||="), t);
     // true
 }
