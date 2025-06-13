@@ -1,3 +1,4 @@
+// use std::time::Instant;
 #[derive(Debug)]
 pub enum Operator {
     Negation, // ! true now its false and vice versa
@@ -74,7 +75,7 @@ fn parse_formula(formula: &str) -> Node{
     tree.pop().unwrap()
 }
 
-fn parse_formula_char(formula: &str) -> (Node, Vec<char>) {
+fn parse_formula_char(formula: &str) ->  Vec<char> {
     let mut tree: Vec<Node> = Vec::new();
     let mut used_char: Vec<char> = Vec::new();
 
@@ -87,51 +88,36 @@ fn parse_formula_char(formula: &str) -> (Node, Vec<char>) {
                 }
             }
             '!' =>{
-                let child = Box::new(tree.pop().expect("Missing value for !"));
-                tree.push(UnaryExpr {op: Negation, child });
+                continue;
             }
             '&' => {
-                let rhs = Box::new(tree.pop().expect("Missing rhs value for &"));
-                let lhs = Box::new(tree.pop().expect("Missing lhs value for &"));
-                tree.push(BinaryExpr {op: Conjunction, lhs, rhs});
+                continue;
             }
             '|' => {
-                let rhs = Box::new(tree.pop().expect("Missing rhs value for &"));
-                let lhs = Box::new(tree.pop().expect("Missing lhs value for &"));
-                tree.push(BinaryExpr {op: Disjunction, lhs, rhs});
+                continue;
             }
             '^' => {
-                let rhs = Box::new(tree.pop().expect("Missing rhs value for ^"));
-                let lhs = Box::new(tree.pop().expect("Missing lhs value for ^"));
-                tree.push(BinaryExpr {op: ExclusiveDisjunction, lhs, rhs}); 
+                continue; 
             }
             '>' => {
-                let rhs = Box::new(tree.pop().expect("Missing rhs value for >"));
-                let lhs = Box::new(tree.pop().expect("Missing lhs value for >"));
-                tree.push(BinaryExpr {op: MaterialCondition, lhs, rhs});
+                continue;
             }
             '=' => {
-                let rhs = Box::new(tree.pop().expect("Missing rhs value for ="));
-                let lhs = Box::new(tree.pop().expect("Missing lhs value for ="));
-                tree.push(BinaryExpr {op: LogicalEquivalence, lhs, rhs});
+                continue;
             }
             _ => panic!("Invalid char in the formula"),
         }
     }
-    assert!(tree.len() == 1, "Invalid postfix expression");
-    (tree.pop().unwrap(), used_char)
+    used_char
 }
 
 fn evaluate(node: &Node) -> bool {
     match node {
-        Node::Bool(val) => {
-            println!("{val}");
-            false
-        }
-        Node::UnaryExpr{ op, child } => {
+        Node::Bool(val) => *val,
+        Node::UnaryExpr{ op: _, child } => {
             let val = evaluate(child);
-            let res = !val;
-            res
+            // let res = !val;
+            !val
         }
         Node::BinaryExpr{ op, lhs, rhs} => {
             let left = evaluate(lhs);
@@ -152,20 +138,18 @@ fn evaluate(node: &Node) -> bool {
     }
 }
 
-fn give_value_to_char(current_line: i64, formula: &str, used_char: &Vec<char>) -> Node{
-    let mut changed_formula: String = formula.to_string(); // fun fact .to_string() calls String::from and String::from calls .to_owned()
+fn give_value_to_char(current_line: i64, formula: &str, used_char: &[char]) -> Node {
+    let mut changed_formula: String = formula.to_string();
     let base: i64 = 2;
-    let iterations = base.pow((used_char.len()) as u32) as f64;
-    for i in 0..used_char.len(){
-        
-        if iterations * (1.00 / base.pow((i + 1) as u32) as f64) < current_line as f64{
-            // println!("{}",i);
-            changed_formula = changed_formula.replace(used_char[i], "0");
-        } else {
-            changed_formula = changed_formula.replace(used_char[i], "1");
-        }
+    let n = used_char.len();
+
+    for i in 0..n {
+        let pow = base.pow((n - i - 1) as u32);
+        let val = (current_line / pow) % 2;
+        changed_formula = changed_formula.replace(used_char[i], &val.to_string());
+        print!("| {val} ");
     }
-    println!("{changed_formula}");
+
     parse_formula(changed_formula.as_str())
 }
 
@@ -175,26 +159,28 @@ fn print_and_resolve(used_char: &Vec<char>, formula: &str) {
         
     }
     println!("| = |");
+    for _i in 0..=used_char.len(){
+        print!("|---");
+    }
+    println!("|");
     let base = 2i64;
-    // index in the Vec<char>
-    // 1 -> 2 -> 3 -> 4 ->
-    // 1/2 -> 1/4 -> 1/8 -> 1/16
     let iterations = base.pow((used_char.len()) as u32);
-    println!("{iterations}");
-    for i in 1..=iterations {
+    for i in 0..iterations {
         let node = give_value_to_char(i, formula, used_char);
-        // if i % 2 == 1 {
-        //     println!("false");
-        // } else {
-        //     println!("true");
-        // }
+        let val = evaluate(&node);
+        if val {
+            println!("| 1 |");
+        } else {
+            println!("| 0 |");
+        }
     }
     
 }
 
 
 fn print_truth_table(formula: &str){
-    let (root, used_char) = parse_formula_char(formula);
+    let used_char = parse_formula_char(formula);
+    // println!("{used_char:?}");
     print_and_resolve(&used_char, formula);
 }
 
@@ -202,7 +188,9 @@ fn print_truth_table(formula: &str){
 
 // TRUTH TABLE GOES LIKE 2/4/8/16/32/..
 // conditions to know if true or false:
-// i starts at 1 and ends in 32 for example -> i % 2 -> if 1 false if 2 true
 fn main() {
+    // let start = Instant::now();
     print_truth_table("AC&B|");
+    // let duration = start.elapsed();
+    // println!("Took {:?}", duration);
 }
