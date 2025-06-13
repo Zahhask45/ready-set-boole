@@ -75,6 +75,33 @@ fn parse_formula(formula: &str) -> Node{
     tree.pop().unwrap()
 }
 
+
+fn evaluate(node: &Node) -> bool {
+    match node {
+        Node::Bool(val) => *val,
+        Node::UnaryExpr{ op: _, child } => {
+            let val = evaluate(child);
+            !val
+        }
+        Node::BinaryExpr{ op, lhs, rhs} => {
+            let left = evaluate(lhs);
+            let right = evaluate(rhs);
+            let res: bool;
+            match op {
+                Conjunction => res = left & right,
+                Disjunction => res = left | right,
+                ExclusiveDisjunction => res = left ^ right,
+                MaterialCondition => res = !left | right,
+                LogicalEquivalence => res = !(left ^ right),
+                Negation => panic!("Should not enter here"),
+                
+            }
+            res
+        }
+        Node::Value(_val) => panic!("There should not be any char at this momment"),
+    }
+}
+
 fn parse_formula_char(formula: &str) ->  Vec<char> {
     let mut tree: Vec<Node> = Vec::new();
     let mut used_char: Vec<char> = Vec::new();
@@ -109,33 +136,6 @@ fn parse_formula_char(formula: &str) ->  Vec<char> {
         }
     }
     used_char
-}
-
-fn evaluate(node: &Node) -> bool {
-    match node {
-        Node::Bool(val) => *val,
-        Node::UnaryExpr{ op: _, child } => {
-            let val = evaluate(child);
-            // let res = !val;
-            !val
-        }
-        Node::BinaryExpr{ op, lhs, rhs} => {
-            let left = evaluate(lhs);
-            let right = evaluate(rhs);
-            let res: bool;
-            match op {
-                Conjunction => res = left & right,
-                Disjunction => res = left | right,
-                ExclusiveDisjunction => res = left ^ right,
-                MaterialCondition => res = !left | right,
-                LogicalEquivalence => res = !(left ^ right),
-                Negation => panic!("Should not enter here"),
-                
-            }
-            res
-        }
-        Node::Value(_val) => panic!("There should not be any char at this momment"),
-    }
 }
 
 fn give_value_to_char(current_line: i64, formula: &str, used_char: &[char]) -> Node {
@@ -180,17 +180,13 @@ fn print_and_resolve(used_char: &Vec<char>, formula: &str) {
 
 fn print_truth_table(formula: &str){
     let used_char = parse_formula_char(formula);
-    // println!("{used_char:?}");
     print_and_resolve(&used_char, formula);
 }
 
 
-
-// TRUTH TABLE GOES LIKE 2/4/8/16/32/..
-// conditions to know if true or false:
 fn main() {
     // let start = Instant::now();
-    print_truth_table("AC&B|");
+    print_truth_table("AB&C|DE&^FG|^HI&^");
     // let duration = start.elapsed();
     // println!("Took {:?}", duration);
 }
