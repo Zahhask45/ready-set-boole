@@ -110,7 +110,7 @@ fn equivalence(node: Node) -> Node {
         },
         Node::UnaryExpr { op, child } => Node::UnaryExpr {
             op,
-            child: Box::new(remove_xor(*child)),
+            child: Box::new(equivalence(*child)),
         },
         Value(val) => Value(val), // Value or Bool — return as is
         Bool(c) => Bool(c),
@@ -143,7 +143,7 @@ fn material_conditon(node: Node) -> Node {
         },
         Node::UnaryExpr { op, child } => Node::UnaryExpr {
             op,
-            child: Box::new(remove_xor(*child)),
+            child: Box::new(material_conditon(*child)),
         },
         Value(val) => Value(val),
         Bool(c) => Bool(c),
@@ -299,11 +299,10 @@ fn do_all(node: Node) -> Node {
 
 fn negation_normal_form(formula: &str) -> String{
     // let root = double_negation(de_morgans_law(material_conditon(equivalence(remove_xor(parse_formula(formula))))));
-    // let root = de_morgans_law(de_morgans_law(parse_formula(formula)));
-    let root = parse_formula(formula);
+    let root = de_morgans_law(de_morgans_law(parse_formula(formula)));
+    // let root = do_all(parse_formula(formula));
     
     println!("{root:?}");
-    // new_formula
     formula.to_owned()
 }
 
