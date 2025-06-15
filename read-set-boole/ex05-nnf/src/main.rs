@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Operator {
     Negation, // ! true now its false and vice versa
     Conjunction, // &
@@ -10,7 +10,7 @@ pub enum Operator {
 
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Node {
     // leaf
     Value(char),
@@ -112,8 +112,7 @@ fn equivalence(node: Node) -> Node {
             op,
             child: Box::new(equivalence(*child)),
         },
-        Value(val) => Value(val), // Value or Bool — return as is
-        Bool(c) => Bool(c),
+        other => other,
     }
 }
 
@@ -145,8 +144,7 @@ fn material_conditon(node: Node) -> Node {
             op,
             child: Box::new(material_conditon(*child)),
         },
-        Value(val) => Value(val),
-        Bool(c) => Bool(c),
+        other => other,
     }
 }
 
@@ -194,8 +192,7 @@ fn remove_xor(node: Node) -> Node {
             op,
             child: Box::new(remove_xor(*child)),
         },
-        Value(val) => Value(val),
-        Bool(c) => Bool(c),
+        other => other,
     }
 }
 
@@ -255,14 +252,21 @@ fn double_negation(node: Node) -> Node {
                 Node::UnaryExpr {
                     op: Operator::Negation,
                     child: inner,
-                } => *inner, // Double negation: remove both
+                } => {
+                    *inner // Double negation: remove both
+                }
                 other => Node::UnaryExpr {
                     op: Operator::Negation,
                     child: Box::new(other),
                 },
             }
         }
-        other => other,
+        Node::BinaryExpr { op, lhs, rhs } => Node::BinaryExpr {
+            op,
+            lhs: Box::new(double_negation(*lhs)),
+            rhs: Box::new(double_negation(*rhs)),
+        },
+        other => other
     }
 }
 
@@ -270,57 +274,64 @@ fn do_all(node: Node) -> Node {
     double_negation(de_morgans_law(material_conditon(equivalence(remove_xor(node)))))
 }
 
-// fn evaluate(node: &Node, formula: &str) -> String {
-//     match node {
-//         Node::Bool(val) => *value,
-//         Node::UnaryExpr{ op: _, child } => {
-//             let val = evaluate(child);
-//             !val
-//         }
-//         Node::BinaryExpr{ op, lhs, rhs} => {
-//             let left = evaluate(lhs);
-//             let right = evaluate(rhs);
-//             let res: bool;
-//             match op {
-//                 Conjunction => res = left & right,
-//                 Disjunction => res = left | right,
-//                 ExclusiveDisjunction => res = left ^ right,
-//                 MaterialCondition => res = !left | right,
-//                 LogicalEquivalence => res = !(left ^ right),
-//                 Negation => panic!("Should not enter here"),
-//                 
-//             }
-//             res
-//         }
-//         Node::Value(_val) => panic!("There should not be any char at this momment"),
-//     }
-// }
+fn ast_to_rpn(node: &Node) -> String {
+    match node {
+        Node::Value(val) => val.to_string(),
+        Node::Bool(_c) => panic!("Should not contain '1' or '0'"),
+        Node::UnaryExpr { op, child } => {
+            let child_rpn = ast_to_rpn(child);
+            format!("{}{}", child_rpn, operator_symbol(op))
+        }
+        Node::BinaryExpr { op, lhs, rhs } => {
+            let lhs_rpn = ast_to_rpn(lhs);
+            let rhs_rpn = ast_to_rpn(rhs);
+            format!("{}{}{}", lhs_rpn, rhs_rpn, operator_symbol(op))
+        }
+    }
+}
+
+fn operator_symbol(op: &Operator) -> &str {
+    match op {
+        Operator::Negation => "!",
+        Operator::Conjunction => "&",
+        Operator::Disjunction => "|",
+        Operator::ExclusiveDisjunction => "^",
+        Operator::MaterialCondition => ">",
+        Operator::LogicalEquivalence => "=",
+    }
+}
 
 
 fn negation_normal_form(formula: &str) -> String{
-    // let root = double_negation(de_morgans_law(material_conditon(equivalence(remove_xor(parse_formula(formula))))));
-    let root = de_morgans_law(de_morgans_law(parse_formula(formula)));
-    // let root = do_all(parse_formula(formula));
-    
-    println!("{root:?}");
-    formula.to_owned()
+    let mut original = parse_formula(formula);
+    let mut root = do_all(parse_formula(formula));
+    while original != root {
+        original = root.clone();
+        root = do_all(root);
+    }
+    ast_to_rpn(&root)
 }
 
 
 
 fn main() {
-    // println!("{}", negation_normal_form("AB&C|DE&^"));
-    // // println!("{}", negation_normal_form("AB&C|D!E!|&A!B!|C!&DE&&|"));
-    // println!("AB&C|D!E!|&A!B!|C!&DE&&|");
-    // println!("AB&C|DE&^FG|^HI&^");
-    // println!("{}", negation_normal_form("AB&C|DE&!&!AB&C|DE&&|FG|!&!AB&C|DE&!&!AB&C|DE&&|FG|&|HI&!&!AB&C|DE&!&!AB&C|DE&&|FG|!&!AB&C|DE&!&!AB&C|DE&&|FG|&|HI&&|"));
+    println!("{}", negation_normal_form("AB&!"));
+    // A!B!|
+    println!("{}", negation_normal_form("AB|!"));
+    // A!B!&
+    println!("{}", negation_normal_form("AB>"));
+    // A!B|
+    println!("{}", negation_normal_form("AB="));
+    // AB&A!B!&|
     println!("{}", negation_normal_form("AB|C&!"));
-    print_tree("A!B!&C!|");
-    println!("A!B!&C!|");
+    // A!B!&C!|
+    println!("{}", negation_normal_form("A!B!&!"));
+    println!("{}", negation_normal_form("AB&C|DE&^FG|^HI&^"));
+    println!("{}", negation_normal_form("AB&C|DE&!&!AB&C|DE&&|FG|!&!AB&C|DE&!&!AB&C|DE&&|FG|&|HI&!&!AB&C|DE&!&!AB&C|DE&&|FG|!&!AB&C|DE&!&!AB&C|DE&&|FG|&|HI&&|"));    
 }
 
 
-
+#[cfg(debug_assertions)]
 fn print_tree(formula: &str) {
     let node = parse_formula(formula);
     println!("{node:?}");
