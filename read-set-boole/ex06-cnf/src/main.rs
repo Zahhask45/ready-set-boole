@@ -1,6 +1,6 @@
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Operator {
-    Negation, // !
+    Negation, // !q
     Conjunction, // &
     Disjunction, // |
     ExclusiveDisjunction, // ^
@@ -270,8 +270,82 @@ fn double_negation(node: Node) -> Node {
     }
 }
 
+fn distributivity(node: Node) -> Node{
+    match node {
+        Node::BinaryExpr {op: Operator::Disjunction, lhs, rhs} => {
+            if let Node::BinaryExpr { op: Operator::Conjunction, lhs: left, rhs: right} = *lhs {
+               // Recursively expand children first
+               let lhs = Box::new(*left);
+               let rhs = Box::new(*right);
+   
+               // Contruct the Material condition of lhs with rhs
+               let left_and = Node::BinaryExpr {
+                   op: Operator::MaterialCondition,
+                   lhs: lhs.clone(),
+                   rhs: rhs.clone(),
+               };
+   
+               // Contruct the Material condition of rhs with lhs
+               let right_and = Node::BinaryExpr {
+                   op: Operator::MaterialCondition,
+                   lhs: rhs.clone(),
+                   rhs: lhs.clone(),
+               };
+   
+               // Return the Conjunction of the left and right conditions
+               Node::BinaryExpr {
+                   op: Operator::Conjunction,
+                   lhs: Box::new(left_and),
+                   rhs: Box::new(right_and),
+               }
+            } else if let Node::BinaryExpr { op: Operator::Conjunction, lhs: left, rhs: right} = *rhs{
+                // Recursively expand children first
+                let lhs = Box::new(equivalence(*left));
+                let rhs = Box::new(equivalence(*right));
+
+                // Contruct the Material condition of lhs with rhs
+                let left_and = Node::BinaryExpr {
+                   op: Operator::MaterialCondition,
+                   lhs: lhs.clone(),
+                   rhs: rhs.clone(),
+                };
+
+                // Contruct the Material condition of rhs with lhs
+                let right_and = Node::BinaryExpr {
+                   op: Operator::MaterialCondition,
+                   lhs: rhs.clone(),
+                   rhs: lhs.clone(),
+                };
+
+                // Return the Conjunction of the left and right conditions
+                Node::BinaryExpr {
+                   op: Operator::Conjunction,
+                   lhs: Box::new(left_and),
+                   rhs: Box::new(right_and),
+                }
+            } else{
+                Node::BinaryExpr {
+                    op: Disjunction,
+                    lhs: Box::new(distributivity(*lhs)),
+                    rhs: Box::new(distributivity(*rhs)),
+                }
+            }
+        }
+        Node::UnaryExpr { op, child } => Node::UnaryExpr {
+            op,
+            child: Box::new(distributivity(*child)),
+        },
+        Node::BinaryExpr {op, lhs, rhs} => Node::BinaryExpr {
+            op,
+            lhs: Box::new(distributivity(*lhs)),
+            rhs: Box::new(distributivity(*rhs)),
+        },
+        other => other,
+    }
+}
+
 fn do_all(node: Node) -> Node {
-    double_negation(de_morgans_law(material_conditon(equivalence(remove_xor(node)))))
+    distributivity(double_negation(de_morgans_law(material_conditon(equivalence(remove_xor(node))))))
 }
 
 
@@ -288,19 +362,21 @@ fn conjunctive_normal_form(formula: &str) -> String{
 
 
 fn main() {
-    // println!("{}", negation_normal_form("AB&!"));
-    // // A!B!|
-    // println!("{}", negation_normal_form("AB|!"));
-    // // A!B!&
-    // println!("{}", negation_normal_form("AB>"));
-    // // A!B|
-    // println!("{}", negation_normal_form("AB="));
-    // // AB&A!B!&|
-    // println!("{}", negation_normal_form("AB|C&!"));
-    // // A!B!&C!|
-    // println!("{}", negation_normal_form("A!B!&!"));
-    // println!("{}", negation_normal_form("AB&C|DE&^FG|^HI&^"));
-    // println!("{}", negation_normal_form("AB&C|DE&!&!AB&C|DE&&|FG|!&!AB&C|DE&!&!AB&C|DE&&|FG|&|HI&!&!AB&C|DE&!&!AB&C|DE&&|FG|!&!AB&C|DE&!&!AB&C|DE&&|FG|&|HI&&|"));    
+    println!("{}", conjunctive_normal_form("AB&!"));
+    // A!B!|
+    println!("{}", conjunctive_normal_form("AB|!"));
+    // A!B!&
+    println!("{}", conjunctive_normal_form("AB|C&"));
+    // AB|C&
+    println!("{}", conjunctive_normal_form("AB|C|D|"));
+    // ABCD|||
+    println!("{}", conjunctive_normal_form("AB&C&D&"));
+    // ABCD&&&
+    println!("{}", conjunctive_normal_form("AB&!C!|"));
+    // A!B!C!||
+    println!("{}", conjunctive_normal_form("AB|!C!&"));
+    // A!B!C!&&
+
 }
 
 //========== PARSE THE ASYMETRIC SYNTAX TREE(AST) TO REVERSE POLISH NOTATION(RPN) =======
@@ -334,26 +410,14 @@ fn operator_symbol(op: &Operator) -> &str {
 
 //=======================================================================================
 
+// This will make the Karnaugh map and then I just need to sum the groups where there are 1(true) so we know that the others are 0(false)
+fn karnaugh_map(node: Node) -> Node {
+    
+}
+
+
 #[cfg(debug_assertions)]
 fn print_tree(formula: &str) {
     let node = parse_formula(formula);
     println!("{node:?}");
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
