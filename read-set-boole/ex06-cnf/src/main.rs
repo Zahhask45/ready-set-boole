@@ -28,6 +28,12 @@ pub enum Node {
     },
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct TruthRow {
+    inputs: Vec<bool>,
+    val: bool,
+}
+
 use Operator::*;
 use Node::*;
 
@@ -350,6 +356,7 @@ fn do_all(node: Node) -> Node {
 
 
 fn conjunctive_normal_form(formula: &str) -> String{
+    karnaugh_map(formula);
     let mut original = parse_formula(formula);
     let mut root = do_all(parse_formula(formula));
     while original != root {
@@ -362,20 +369,20 @@ fn conjunctive_normal_form(formula: &str) -> String{
 
 
 fn main() {
-    println!("{}", conjunctive_normal_form("AB&!"));
-    // A!B!|
-    println!("{}", conjunctive_normal_form("AB|!"));
-    // A!B!&
-    println!("{}", conjunctive_normal_form("AB|C&"));
-    // AB|C&
+    // println!("{}", conjunctive_normal_form("AB&!"));
+    // // A!B!|
+    // println!("{}", conjunctive_normal_form("AB|!"));
+    // // A!B!&
+    // println!("{}", conjunctive_normal_form("AB|C&"));
+    // // AB|C&
     println!("{}", conjunctive_normal_form("AB|C|D|"));
     // ABCD|||
-    println!("{}", conjunctive_normal_form("AB&C&D&"));
-    // ABCD&&&
-    println!("{}", conjunctive_normal_form("AB&!C!|"));
-    // A!B!C!||
-    println!("{}", conjunctive_normal_form("AB|!C!&"));
-    // A!B!C!&&
+    // println!("{}", conjunctive_normal_form("AB&C&D&"));
+    // // ABCD&&&
+    // println!("{}", conjunctive_normal_form("AB&!C!|"));
+    // // A!B!C!||
+    // println!("{}", conjunctive_normal_form("AB|!C!&"));
+    // // A!B!C!&&
 
 }
 
@@ -410,9 +417,108 @@ fn operator_symbol(op: &Operator) -> &str {
 
 //=======================================================================================
 
+
+fn parse_formula_char(formula: &str) ->  Vec<char> {
+    let mut tree: Vec<Node> = Vec::new();
+    let mut used_char: Vec<char> = Vec::new();
+
+    for c in formula.chars() {
+        match c {
+            'A'..='Z' => {
+                tree.push(Value(c));
+                if !used_char.iter().any(|&val| val == c) {
+                    used_char.push(c);
+                }
+            }
+            '!' =>{
+                continue;
+            }
+            '&' => {
+                continue;
+            }
+            '|' => {
+                continue;
+            }
+            '^' => {
+                continue; 
+            }
+            '>' => {
+                continue;
+            }
+            '=' => {
+                continue;
+            }
+            _ => panic!("Invalid char in the formula"),
+        }
+    }
+    used_char
+}
+
+fn evaluate(node: &Node) -> bool {
+    match node {
+        Node::Bool(val) => *val,
+        Node::UnaryExpr{ op: _, child } => {
+            let val = evaluate(child);
+            !val
+        }
+        Node::BinaryExpr{ op, lhs, rhs} => {
+            let left = evaluate(lhs);
+            let right = evaluate(rhs);
+            let res: bool;
+            match op {
+                Conjunction => res = left & right,
+                Disjunction => res = left | right,
+                ExclusiveDisjunction => res = left ^ right,
+                MaterialCondition => res = !left | right,
+                LogicalEquivalence => res = !(left ^ right),
+                Negation => panic!("Should not enter here"),
+                
+            }
+            res
+        }
+        Node::Value(_val) => panic!("There should not be any char at this momment"),
+    }
+}
+
+fn give_value_to_char(current_line: i64, formula: &str, used_char: &[char]) -> Node {
+    let mut changed_formula: String = formula.to_string();
+    let base: i64 = 2;
+    let n = used_char.len();
+
+    for i in 0..n {
+        let pow = base.pow((n - i - 1) as u32);
+        let val = (current_line / pow) % 2;
+        changed_formula = changed_formula.replace(used_char[i], &val.to_string());
+    }
+
+    parse_formula_binary(changed_formula.as_str())
+}
+
+
+
 // This will make the Karnaugh map and then I just need to sum the groups where there are 1(true) so we know that the others are 0(false)
-fn karnaugh_map(node: Node) -> Node {
+fn karnaugh_map(formula: &str) {
+    let mut truth_table: Vec<TruthRow> = Vec::new();
+    let mut changed_formula: String;
     
+    let used_char = parse_formula_char(formula);
+    // need to create conditin for when the used_char as more than 4 variables to exit (maybe put that in the main)
+    let base = 2i64;
+    let iterations = base.pow((used_char.len()) as u32);
+    for i in 0..iterations {
+        let a = (i >> 3) & 1 == 1;
+        let b = (i >> 2) & 1 == 1;
+        let c = (i >> 1) & 1 == 1;
+        let d = i & 1 == 1;
+        let node = give_value_to_char(i, formula, &used_char);
+        let val = evaluate(&node);
+        truth_table.push(TruthRow {
+            inputs: vec![a, b, c, d],
+            val,
+        });
+        println!("{d}");
+    }
+
 }
 
 
@@ -420,4 +526,47 @@ fn karnaugh_map(node: Node) -> Node {
 fn print_tree(formula: &str) {
     let node = parse_formula(formula);
     println!("{node:?}");
+}
+
+fn parse_formula_binary(formula: &str) -> Node{
+    let mut tree: Vec<Node> = Vec::new();
+
+    for c in formula.chars() {
+        match c {
+            '0' => tree.push(Bool(false)),
+            '1' => tree.push(Bool(true)),
+            '!' =>{
+                let child = Box::new(tree.pop().expect("Missing value for !"));
+                tree.push(UnaryExpr {op: Negation, child });
+            }
+            '&' => {
+                let rhs = Box::new(tree.pop().expect("Missing rhs value for &"));
+                let lhs = Box::new(tree.pop().expect("Missing lhs value for &"));
+                tree.push(BinaryExpr {op: Conjunction, lhs, rhs});
+            }
+            '|' => {
+                let rhs = Box::new(tree.pop().expect("Missing rhs value for &"));
+                let lhs = Box::new(tree.pop().expect("Missing lhs value for &"));
+                tree.push(BinaryExpr {op: Disjunction, lhs, rhs});
+            }
+            '^' => {
+                let rhs = Box::new(tree.pop().expect("Missing rhs value for ^"));
+                let lhs = Box::new(tree.pop().expect("Missing lhs value for ^"));
+                tree.push(BinaryExpr {op: ExclusiveDisjunction, lhs, rhs}); 
+            }
+            '>' => {
+                let rhs = Box::new(tree.pop().expect("Missing rhs value for >"));
+                let lhs = Box::new(tree.pop().expect("Missing lhs value for >"));
+                tree.push(BinaryExpr {op: MaterialCondition, lhs, rhs});
+            }
+            '=' => {
+                let rhs = Box::new(tree.pop().expect("Missing rhs value for ="));
+                let lhs = Box::new(tree.pop().expect("Missing lhs value for ="));
+                tree.push(BinaryExpr {op: LogicalEquivalence, lhs, rhs});
+            }
+            _ => panic!("Invalid char in the formula"),
+        }
+    }
+    assert!(tree.len() == 1, "Invalid postfix expression");
+    tree.pop().unwrap()
 }
