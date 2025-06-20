@@ -37,6 +37,10 @@ struct TruthRow {
 use Operator::*;
 use Node::*;
 
+
+//====================================== PARSERS ========================================
+//=======================================================================================
+
 fn parse_formula(formula: &str) -> Node{
     let mut tree: Vec<Node> = Vec::new();
 
@@ -80,6 +84,45 @@ fn parse_formula(formula: &str) -> Node{
     assert!(tree.len() == 1, "Invalid postfix expression");
     tree.pop().unwrap()
 }
+
+fn parse_formula_char(formula: &str) ->  Vec<char> {
+    let mut tree: Vec<Node> = Vec::new();
+    let mut used_char: Vec<char> = Vec::new();
+
+    for c in formula.chars() {
+        match c {
+            'A'..='Z' => {
+                tree.push(Value(c));
+                if !used_char.iter().any(|&val| val == c) {
+                    used_char.push(c);
+                }
+            }
+            '!' =>{
+                continue;
+            }
+            '&' => {
+                continue;
+            }
+            '|' => {
+                continue;
+            }
+            '^' => {
+                continue; 
+            }
+            '>' => {
+                continue;
+            }
+            '=' => {
+                continue;
+            }
+            _ => panic!("Invalid char in the formula"),
+        }
+    }
+    used_char
+}
+
+//=======================================================================================
+
 
 fn equivalence(node: Node) -> Node {
     match node {
@@ -375,16 +418,24 @@ fn main() {
     // // A!B!&
     // println!("{}", conjunctive_normal_form("AB|C&"));
     // // AB|C&
-    println!("{}", conjunctive_normal_form("AB|C|D|"));
+    // println!("{}", conjunctive_normal_form("AB|C|D|"));
     // ABCD|||
     // println!("{}", conjunctive_normal_form("AB&C&D&"));
-    // // ABCD&&&
+    println!("{}", conjunctive_normal_form("A!B&C&D&B&"));
+    // println!("{}", conjunctive_normal_form("BCD!A!&&&"));
+    // ABCD&&&
     // println!("{}", conjunctive_normal_form("AB&!C!|"));
     // // A!B!C!||
     // println!("{}", conjunctive_normal_form("AB|!C!&"));
     // // A!B!C!&&
 
 }
+
+
+
+
+
+
 
 //========== PARSE THE ASYMETRIC SYNTAX TREE(AST) TO REVERSE POLISH NOTATION(RPN) =======
 
@@ -418,41 +469,6 @@ fn operator_symbol(op: &Operator) -> &str {
 //=======================================================================================
 
 
-fn parse_formula_char(formula: &str) ->  Vec<char> {
-    let mut tree: Vec<Node> = Vec::new();
-    let mut used_char: Vec<char> = Vec::new();
-
-    for c in formula.chars() {
-        match c {
-            'A'..='Z' => {
-                tree.push(Value(c));
-                if !used_char.iter().any(|&val| val == c) {
-                    used_char.push(c);
-                }
-            }
-            '!' =>{
-                continue;
-            }
-            '&' => {
-                continue;
-            }
-            '|' => {
-                continue;
-            }
-            '^' => {
-                continue; 
-            }
-            '>' => {
-                continue;
-            }
-            '=' => {
-                continue;
-            }
-            _ => panic!("Invalid char in the formula"),
-        }
-    }
-    used_char
-}
 
 fn evaluate(node: &Node) -> bool {
     match node {
@@ -496,10 +512,36 @@ fn give_value_to_char(current_line: i64, formula: &str, used_char: &[char]) -> N
 
 
 
+fn gray_code(n: u8) -> usize{
+    (n ^ (n >> 1)) as usize
+}
+
+
+
+
+fn grouping(kmap: [[bool;4];4]){
+    // let groups = 
+    let base = 2i64;
+    let iterations = base.pow(4);
+    for i in 0..iterations {
+        let a = (i >> 3) & 1 == 1;
+        let b = (i >> 2) & 1 == 1;
+        let c = (i >> 1) & 1 == 1;
+        let d = i & 1 == 1;
+
+        let row = gray_code(((a as u8) << 1) | b as u8);
+        let col = gray_code(((c as u8) << 1) | d as u8);
+        // println!("{}", kmap[row][col]);
+        if !kmap[row][col]{
+            // println!("{row}                 {col}");
+        }
+    }
+}
+
+
 // This will make the Karnaugh map and then I just need to sum the groups where there are 1(true) so we know that the others are 0(false)
 fn karnaugh_map(formula: &str) {
-    let mut truth_table: Vec<TruthRow> = Vec::new();
-    let mut changed_formula: String;
+    let mut kmap = [[false; 4]; 4];
     
     let used_char = parse_formula_char(formula);
     // need to create conditin for when the used_char as more than 4 variables to exit (maybe put that in the main)
@@ -510,23 +552,28 @@ fn karnaugh_map(formula: &str) {
         let b = (i >> 2) & 1 == 1;
         let c = (i >> 1) & 1 == 1;
         let d = i & 1 == 1;
-        let node = give_value_to_char(i, formula, &used_char);
-        let val = evaluate(&node);
-        truth_table.push(TruthRow {
-            inputs: vec![a, b, c, d],
-            val,
-        });
-        println!("{d}");
+
+        let mut changed_formula = formula.to_string();
+        changed_formula = changed_formula.replace("A", &(a as i8).to_string());
+        changed_formula = changed_formula.replace("B", &(b as i8).to_string());
+        changed_formula = changed_formula.replace("C", &(c as i8).to_string());
+        changed_formula = changed_formula.replace("D", &(d as i8).to_string());
+
+        
+        let row = gray_code(((a as u8) << 1) | b as u8);
+        let col = gray_code(((c as u8) << 1) | d as u8);
+        println!("{row}                 {col}");
+
+        
+        // let node = give_value_to_char(i, formula, &used_char);
+        let val = evaluate(&parse_formula_binary(&changed_formula));
+        kmap[row][col] = val;
     }
-
+    grouping(kmap);
+    print_kmap(kmap);
 }
 
 
-#[cfg(debug_assertions)]
-fn print_tree(formula: &str) {
-    let node = parse_formula(formula);
-    println!("{node:?}");
-}
 
 fn parse_formula_binary(formula: &str) -> Node{
     let mut tree: Vec<Node> = Vec::new();
@@ -570,3 +617,23 @@ fn parse_formula_binary(formula: &str) -> Node{
     assert!(tree.len() == 1, "Invalid postfix expression");
     tree.pop().unwrap()
 }
+
+
+#[cfg(debug_assertions)]
+fn print_tree(formula: &str) {
+    let node = parse_formula(formula);
+    println!("{node:?}");
+}
+
+
+#[cfg(debug_assertions)]
+fn print_kmap(kmap: [[bool;4];4]) {
+    for i in 0..4{
+        for j in 0..4{
+            print!("[{}]", kmap[i][j] as i8);
+        }
+        println!();
+    }
+}
+
+
