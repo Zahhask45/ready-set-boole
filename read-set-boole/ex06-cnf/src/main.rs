@@ -29,9 +29,10 @@ pub enum Node {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct TruthRow {
-    inputs: Vec<bool>,
-    val: bool,
+struct Kmapzero {
+    row: usize,
+    col: usize,
+    grouped: bool,
 }
 
 use Operator::*;
@@ -421,8 +422,8 @@ fn main() {
     // println!("{}", conjunctive_normal_form("AB|C|D|"));
     // ABCD|||
     // println!("{}", conjunctive_normal_form("AB&C&D&"));
-    println!("{}", conjunctive_normal_form("A!B&C&D&B&"));
-    // println!("{}", conjunctive_normal_form("BCD!A!&&&"));
+    // println!("{}", conjunctive_normal_form("A!B&C&D&B&"));
+    println!("{}", conjunctive_normal_form("BCD!A!&&&"));
     // ABCD&&&
     // println!("{}", conjunctive_normal_form("AB&!C!|"));
     // // A!B!C!||
@@ -518,24 +519,19 @@ fn gray_code(n: u8) -> usize{
 
 
 
-
-fn grouping(kmap: [[bool;4];4]){
-    // let groups = 
-    let base = 2i64;
-    let iterations = base.pow(4);
-    for i in 0..iterations {
-        let a = (i >> 3) & 1 == 1;
-        let b = (i >> 2) & 1 == 1;
-        let c = (i >> 1) & 1 == 1;
-        let d = i & 1 == 1;
-
-        let row = gray_code(((a as u8) << 1) | b as u8);
-        let col = gray_code(((c as u8) << 1) | d as u8);
-        // println!("{}", kmap[row][col]);
-        if !kmap[row][col]{
-            // println!("{row}                 {col}");
+// 
+fn grouping(kmap: [[bool;4];4]) -> Vec<Kmapzero>{
+    let mut zero_cells:Vec<Kmapzero> = Vec::new();
+    for row in 0..4{
+        for col in 0..4{
+            if !kmap[row][col] {
+                zero_cells.push(Kmapzero {row, col, grouped: false});
+            }
         }
     }
+    println!("Zero_cells: {:?}", zero_cells);
+    // check first if group of 16, close if not check all 8, then if missing 4 then 2 and then 1
+    zero_cells
 }
 
 
@@ -543,25 +539,22 @@ fn grouping(kmap: [[bool;4];4]){
 fn karnaugh_map(formula: &str) {
     let mut kmap = [[false; 4]; 4];
     
-    let used_char = parse_formula_char(formula);
+    let mut used_char = parse_formula_char(formula);
+    used_char.sort();
     // need to create conditin for when the used_char as more than 4 variables to exit (maybe put that in the main)
     let base = 2i64;
     let iterations = base.pow((used_char.len()) as u32);
     for i in 0..iterations {
-        let a = (i >> 3) & 1 == 1;
-        let b = (i >> 2) & 1 == 1;
-        let c = (i >> 1) & 1 == 1;
-        let d = i & 1 == 1;
-
         let mut changed_formula = formula.to_string();
-        changed_formula = changed_formula.replace("A", &(a as i8).to_string());
-        changed_formula = changed_formula.replace("B", &(b as i8).to_string());
-        changed_formula = changed_formula.replace("C", &(c as i8).to_string());
-        changed_formula = changed_formula.replace("D", &(d as i8).to_string());
-
+        for j in 0..used_char.len() {
+            let bit = (used_char.len() - 1) - j;
+            let a = (i >> bit) & 1 == 1;
+            changed_formula = changed_formula.replace(used_char[j], &(a as i8).to_string());
+        }
         
-        let row = gray_code(((a as u8) << 1) | b as u8);
-        let col = gray_code(((c as u8) << 1) | d as u8);
+        
+        let row = gray_code((i / 4) as u8);
+        let col = gray_code((i % 4) as u8);
         println!("{row}                 {col}");
 
         
@@ -569,8 +562,8 @@ fn karnaugh_map(formula: &str) {
         let val = evaluate(&parse_formula_binary(&changed_formula));
         kmap[row][col] = val;
     }
-    grouping(kmap);
     print_kmap(kmap);
+    grouping(kmap);
 }
 
 
