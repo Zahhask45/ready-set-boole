@@ -400,7 +400,19 @@ fn do_all(node: Node) -> Node {
 
 
 fn conjunctive_normal_form(formula: &str) -> String{
-    karnaugh_map(formula);
+    let mut used_char = parse_formula_char(formula);
+    if used_char.len() >= 2 && used_char.len() <= 4 {
+        if used_char.len() == 4 {
+            println!("K-MAP: {}", karnaugh_map4(formula, &mut used_char));
+        }
+        if used_char.len() == 3 {
+            println!("K-MAP: {}", karnaugh_map3(formula, &mut used_char));
+        }
+        if used_char.len() == 2 {
+            println!("K-MAP: {}", karnaugh_map2(formula, &mut used_char));
+        }
+        
+    }
     let mut original = parse_formula(formula);
     let mut root = do_all(parse_formula(formula));
     while original != root {
@@ -519,27 +531,124 @@ fn gray_code(n: u8) -> usize{
 
 
 
-// 
-fn grouping(kmap: [[bool;4];4]) -> Vec<Kmapzero>{
+fn pending_false(zero_cells: &Vec<Kmapzero>) -> bool {
+    let mut pending = false;
+    for it in zero_cells {
+        if !it.grouped {
+            pending = true;
+        }
+    }
+    pending
+}
+
+
+fn missing_trues(zero_cells: &Vec<Kmapzero>) -> usize {
+    let mut pending = 0usize;
+    for it in zero_cells {
+        if !it.grouped {
+            pending += 1;
+        }
+    }
+    pending
+}
+
+fn create_16(zero_cells: &Vec<Kmapzero>) -> Vec<Kmapzero> {
+    let mut new_zero_cells = zero_cells.clone();
+    for it in &mut new_zero_cells{
+        it.grouped = true;
+    }
+    new_zero_cells
+}
+
+fn check_right(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: usize, lenght: usize) -> (Vec<Kmapzero>, bool) {
+    let mut new_zero_cells = zero_cells.clone();
+    let next_col = if col + 1 == lenght{0}else{col + 1};
+    
+    for it in &mut new_zero_cells{
+        if it.row == row && it.col == col {
+            it.grouped = true;
+            let mut can = true;
+            if amount != 0 {
+                (new_zero_cells, can) = check_right(zero_cells, row, next_col, amount - 1, lenght);
+            }
+            if !can{
+                break;
+            }
+            return (new_zero_cells, true)
+        }
+    }
+    (zero_cells.clone(), false)
+}
+
+// 4 by 2 | 4 by 1 | 2 by 1 -> col by row
+fn check_vertically(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: usize) -> Vec<Kmapzero>{
+    // go left or right 4/2
+    let next_col = if col + 1 == amount {0}else{col + 1};
+    let (new_zero_cells, can) = check_right(zero_cells, row, next_col, amount - 1, amount);
+    if can {
+        
+    }
+    // go down or up
+    new_zero_cells
+    
+}
+
+fn create_8<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, kmap: [[bool;C];R]) -> (Vec<Kmapzero>, String){
+    // check groups of 2 by 4 vertically and horizontally
+    let mut new_zero_cells = zero_cells.clone();
+    // let mut missing = C * R;
+    let mut new_formula: String = Default::default();
+    for row in 0..R {
+        for col in 0..C {
+            new_zero_cells = check_vertically(&new_zero_cells, row, col, 4); // the last value will eventually be a CONST
+            // go right 4 
+            // go left 4
+            // go down 4
+            // go up 4
+        }
+    }
+    (new_zero_cells, new_formula)
+}
+
+fn grouping<const C: usize, const R: usize>(kmap: [[bool;C];R]) -> String{
     let mut zero_cells:Vec<Kmapzero> = Vec::new();
-    for row in 0..4{
-        for col in 0..4{
+    for row in 0..R{
+        for col in 0..C{
             if !kmap[row][col] {
                 zero_cells.push(Kmapzero {row, col, grouped: false});
             }
         }
     }
+    println!("{}", kmap.len());
     println!("Zero_cells: {:?}", zero_cells);
     // check first if group of 16, close if not check all 8, then if missing 4 then 2 and then 1
-    zero_cells
+    let mut new_formula: String = Default::default();
+    while pending_false(&zero_cells) {
+        match missing_trues(&zero_cells){
+            16 => {
+                zero_cells = create_16(&zero_cells);
+                new_formula.push('0');
+            }
+            8..16 => {
+                let mut group: String = Default::default();
+                (zero_cells, group) = create_8(&zero_cells, kmap);
+                println!("\n\n\n{:?}", zero_cells);
+                new_formula.push_str(&group);
+            }
+            _ => {break;}
+        }
+    }
+    if new_formula.is_empty() {
+        new_formula = "1".to_string();
+    }
+    new_formula
 }
 
 
 // This will make the Karnaugh map and then I just need to sum the groups where there are 1(true) so we know that the others are 0(false)
-fn karnaugh_map(formula: &str) {
+fn karnaugh_map4(formula: &str, used_char: &mut Vec<char>) -> String{
     let mut kmap = [[false; 4]; 4];
     
-    let mut used_char = parse_formula_char(formula);
     used_char.sort();
     // need to create conditin for when the used_char as more than 4 variables to exit (maybe put that in the main)
     let base = 2i64;
@@ -563,7 +672,68 @@ fn karnaugh_map(formula: &str) {
         kmap[row][col] = val;
     }
     print_kmap(kmap);
-    grouping(kmap);
+    grouping(kmap)
+}
+
+// This will make the Karnaugh map and then I just need to sum the groups where there are 1(true) so we know that the others are 0(false)
+fn karnaugh_map3(formula: &str, used_char: &mut Vec<char>) -> String{
+    let mut kmap = [[false; 4]; 2];
+    
+    used_char.sort();
+    // need to create conditin for when the used_char as more than 4 variables to exit (maybe put that in the main)
+    let base = 2i64;
+    let iterations = base.pow((used_char.len()) as u32);
+    for i in 0..iterations {
+        let mut changed_formula = formula.to_string();
+        for j in 0..used_char.len() {
+            let bit = (used_char.len() - 1) - j;
+            let a = (i >> bit) & 1 == 1;
+            changed_formula = changed_formula.replace(used_char[j], &(a as i8).to_string());
+        }
+        
+        
+        let row = gray_code((i / 4) as u8);
+        let col = gray_code((i % 4) as u8);
+        println!("{row}                 {col}");
+
+        
+        // let node = give_value_to_char(i, formula, &used_char);
+        let val = evaluate(&parse_formula_binary(&changed_formula));
+        kmap[row][col] = val;
+    }
+    print_kmap(kmap);
+    grouping(kmap)
+}
+
+
+// This will make the Karnaugh map and then I just need to sum the groups where there are 1(true) so we know that the others are 0(false)
+fn karnaugh_map2(formula: &str, used_char: &mut Vec<char>) -> String{
+    let mut kmap = [[false; 2]; 2];
+    
+    used_char.sort();
+    // need to create conditin for when the used_char as more than 4 variables to exit (maybe put that in the main)
+    let base = 2i64;
+    let iterations = base.pow((used_char.len()) as u32);
+    for i in 0..iterations {
+        let mut changed_formula = formula.to_string();
+        for j in 0..used_char.len() {
+            let bit = (used_char.len() - 1) - j;
+            let a = (i >> bit) & 1 == 1;
+            changed_formula = changed_formula.replace(used_char[j], &(a as i8).to_string());
+        }
+        
+        
+        let row = gray_code((i / 2) as u8);
+        let col = gray_code((i % 2) as u8);
+        println!("{row}                 {col}");
+
+        
+        // let node = give_value_to_char(i, formula, &used_char);
+        let val = evaluate(&parse_formula_binary(&changed_formula));
+        kmap[row][col] = val;
+    }
+    print_kmap(kmap);
+    grouping(kmap)
 }
 
 
@@ -620,9 +790,9 @@ fn print_tree(formula: &str) {
 
 
 #[cfg(debug_assertions)]
-fn print_kmap(kmap: [[bool;4];4]) {
-    for i in 0..4{
-        for j in 0..4{
+fn print_kmap<const C: usize, const R: usize>(kmap: [[bool;C];R]) {
+    for i in 0..R{
+        for j in 0..C{
             print!("[{}]", kmap[i][j] as i8);
         }
         println!();
