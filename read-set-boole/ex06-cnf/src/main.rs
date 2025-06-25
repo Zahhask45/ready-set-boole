@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Operator {
     Negation, // !q
@@ -662,12 +664,17 @@ fn create_8<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, kmap: [[
         for col in 0..C {
             if check_current_cell(&new_zero_cells, row, col) {
                 (new_zero_cells, group) = check_vertically(&new_zero_cells, row, col, FOUR_TWO); // the last value will eventually be a CONST
-                let parts = group.split(" ");
-                println!("CREATE_8: {group}");
-                // for it in parts {
-                //     println!("{it:?}");
-                //     
-                // }
+                let parts = group.trim().split(" ");
+                // let common: HashSet<String> = group.trim().split(' ').flat_map(|s| s.split(';')).map(|t| t.to_string()).collect();
+                let mut common: HashSet<String> = parts.next().unwrap().split(";").map(|s| s.to_string()).collect();
+                println!("DAMN: {prev:?}");
+                for it in parts {
+                    // common = it
+                    // convert the strings in the split into a hashset<string>
+                    println!("{it:?}");
+                    
+                }
+                // println!("CREATE_8: {group}");
             }
             // check the new_formula and reduce to only 1 Letter
         }
@@ -707,7 +714,8 @@ fn grouping<const C: usize, const R: usize>(kmap: [[bool;C];R], zero_cells: &mut
 fn karnaugh_map4(formula: &str, used_char: &mut Vec<char>) -> String{
     let mut kmap = [[false; 4]; 4];
     let mut zero_cells:Vec<Kmapzero> = Vec::new();
-    let mut str_char: String = used_char.clone().into_iter().collect();
+    let mut str_char: String;
+
 
     
     used_char.sort();
@@ -716,7 +724,8 @@ fn karnaugh_map4(formula: &str, used_char: &mut Vec<char>) -> String{
     let iterations = base.pow((used_char.len()) as u32);
     for i in 0..iterations {
         let mut changed_formula = formula.to_string();
-        str_char = used_char.clone().into_iter().collect();
+        str_char = used_char.iter().map(|c| c.to_string()).collect::<Vec<String>>().join(";");
+        println!("{str_char}");
         for j in 0..used_char.len() {
             let bit = (used_char.len() - 1) - j;
             let a = (i >> bit) & 1 == 1;
