@@ -664,16 +664,21 @@ fn create_8<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, kmap: [[
         for col in 0..C {
             if check_current_cell(&new_zero_cells, row, col) {
                 (new_zero_cells, group) = check_vertically(&new_zero_cells, row, col, FOUR_TWO); // the last value will eventually be a CONST
-                let parts = group.trim().split(" ");
+                let mut parts = group.trim().split(" ");
                 // let common: HashSet<String> = group.trim().split(' ').flat_map(|s| s.split(';')).map(|t| t.to_string()).collect();
                 let mut common: HashSet<String> = parts.next().unwrap().split(";").map(|s| s.to_string()).collect();
-                println!("DAMN: {prev:?}");
+                // println!("DAMN: {prev:?}");
                 for it in parts {
                     // common = it
+                    let current: HashSet<String> = it.split(";").map(|s| s.to_string()).collect();
+                    common.retain(|c| current.contains(c));
                     // convert the strings in the split into a hashset<string>
                     println!("{it:?}");
                     
                 }
+                println!("{common:?}");
+                // need to convert the common to String
+                new_formula = new_formula + common.iter().collect();
                 // println!("CREATE_8: {group}");
             }
             // check the new_formula and reduce to only 1 Letter
