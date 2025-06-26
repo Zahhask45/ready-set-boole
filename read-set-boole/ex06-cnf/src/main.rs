@@ -442,7 +442,9 @@ fn main() {
     // ABCD|||
     // println!("{}", conjunctive_normal_form("AB&C&D&"));
     // println!("{}", conjunctive_normal_form("A!B&C&D&B&"));
-    println!("{}", conjunctive_normal_form("BCD!A!&&&"));
+    // println!("{}", conjunctive_normal_form("BCD!A!&&&"));
+    // println!("{}", conjunctive_normal_form("AB|C!D|&"));
+    println!("{}", conjunctive_normal_form("CD^A!A|&B!B|&"));
     // ABCD&&&
     // println!("{}", conjunctive_normal_form("AB&!C!|"));
     // // A!B!C!||
@@ -596,6 +598,79 @@ fn check_right(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut 
     (zero_cells.clone(), group)
 }
 
+fn check_down(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut usize, lenght: usize) -> (Vec<Kmapzero>, String) {
+    let mut new_zero_cells = zero_cells.clone();
+    let mut group: String = Default::default();
+    let next_row = if row + 1 == lenght{0}else{row + 1};
+    if *amount == 0 {
+        return (zero_cells.clone(), group)
+    }
+    for it in &mut new_zero_cells{
+        if it.row == row && it.col == col {
+            it.grouped = true;
+            group = it.form.clone() + " ";
+            // println!("checked {it:?}");
+            let mut new_group = Default::default();
+            if *amount != 0 {
+                *amount -= 1;
+                (new_zero_cells, new_group) = check_down(&new_zero_cells, next_row, col, amount, lenght);
+            }
+            if new_group.is_empty() && *amount != 0{
+                // println!("banana");
+                break;
+            }
+            group = group + &new_group;
+            // println!("{group}");
+            return (new_zero_cells, group)
+        }
+    }
+    (zero_cells.clone(), group)
+}
+
+fn check_horizontally(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: usize) -> (Vec<Kmapzero>, String){
+    // 4 BY 2
+    if amount == FOUR_TWO {
+        let mut new_amount = amount / 2;
+        let mut group: String = Default::default();
+        let (mut new_zero_cells, mut new_group) = check_down(zero_cells, row, col, &mut new_amount, amount / 2);
+        if !new_group.is_empty() || new_amount != 0{
+            group = group + &new_group;
+            let next_col = if col + 1 == amount / 2{0}else{col + 1};
+            (new_zero_cells, new_group) = check_horizontally(&new_zero_cells, row, next_col, FOUR_ONE);
+            if new_group.is_empty(){
+                let next_col = if col == 0 {(amount / 2) - 1}else{col - 1};
+                (new_zero_cells, new_group) = check_horizontally(&new_zero_cells, row, next_col, FOUR_ONE);
+            }
+            if new_group.is_empty() || new_amount != 0{
+                return (zero_cells.clone(), String::new())
+            }
+            group = group + &new_group;
+            
+        }   
+        
+        if group.is_empty() {
+            return (zero_cells.clone(), group)
+        }
+        (new_zero_cells, group)
+    } else {
+        let mut group: String = Default::default();
+        let mut new_amount = amount;
+        let (new_zero_cells, new_group) = check_down(zero_cells, row, col, &mut new_amount, amount);
+        if !new_group.is_empty() && new_amount == 0{
+            group = group + &new_group;
+        }
+
+
+        
+        // println!("what: {new_zero_cells:?}");
+        if group.is_empty() || new_amount != 0{
+            return (zero_cells.clone(), group)
+        }
+        (new_zero_cells, group)
+    }
+
+}
+
 // 4 by 2 | 4 by 1 | 2 by 1 -> col by row
 // need to return updated zero_cells and the group that it made
 fn check_vertically(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: usize) -> (Vec<Kmapzero>, String){
@@ -664,6 +739,10 @@ fn create_8<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, kmap: [[
         for col in 0..C {
             if check_current_cell(&new_zero_cells, row, col) {
                 (new_zero_cells, group) = check_vertically(&new_zero_cells, row, col, FOUR_TWO); // the last value will eventually be a CONST
+                if group.is_empty(){
+                    (new_zero_cells, group) = check_horizontally(&new_zero_cells, row, col, FOUR_TWO);
+                    // println!("{group}");
+                }
                 let mut parts = group.trim().split(" ");
                 // let common: HashSet<String> = group.trim().split(' ').flat_map(|s| s.split(';')).map(|t| t.to_string()).collect();
                 let mut common: HashSet<String> = parts.next().unwrap().split(";").map(|s| s.to_string()).collect();
@@ -673,15 +752,48 @@ fn create_8<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, kmap: [[
                     let current: HashSet<String> = it.split(";").map(|s| s.to_string()).collect();
                     common.retain(|c| current.contains(c));
                     // convert the strings in the split into a hashset<string>
-                    println!("{it:?}");
+                    // println!("{it:?}");
                     
                 }
-                println!("{common:?}");
+                // println!("{common:?}");
                 // need to convert the common to String
-                new_formula = new_formula + common.iter().collect();
-                // println!("CREATE_8: {group}");
+                for x in common {
+                    new_formula = new_formula + &x;
+                    
+                }
+                println!("CREATE_8: {group}");
             }
             // check the new_formula and reduce to only 1 Letter
+        }
+    }
+    (new_zero_cells, new_formula)
+}
+
+fn create_4<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, kmap: [[bool;C];R]) -> (Vec<Kmapzero>, String){
+    let mut new_zero_cells = zero_cells.clone();
+    let mut group: String = Default::default();
+    let mut new_formula: String = Default::default();
+
+    for row in 0..R {
+        for col in 0..C {
+            if check_current_cell(&new_zero_cells, row, col) {
+                (new_zero_cells, group) = check_vertically(&new_zero_cells, row, col, FOUR_ONE); // the last value will eventually be a CONST 
+                if group.is_empty(){
+                    (new_zero_cells, group) = check_horizontally(&new_zero_cells, row, col, FOUR_ONE);
+                }
+                let mut parts = group.trim().split(" ");
+                let mut common: HashSet<String> = parts.next().unwrap().split(";").map(|s| s.to_string()).collect();
+                for it in parts {
+                    let current: HashSet<String> = it.split(";").map(|s| s.to_string()).collect();
+                    common.retain(|c| current.contains(c));
+                }
+                for x in common {
+                    if new_formula.is_empty(){ new_formula = x; }
+                    else{ new_formula = new_formula + "+" + &x; }
+                    
+                }
+                println!("CREATE_4: {group}");
+            }
         }
     }
     (new_zero_cells, new_formula)
@@ -701,9 +813,17 @@ fn grouping<const C: usize, const R: usize>(kmap: [[bool;C];R], zero_cells: &mut
             8..16 => {
                 let mut group: String = Default::default();
                 (*zero_cells, group) = create_8(zero_cells, kmap);
-                // println!("\n\n\n{:?}", zero_cells);
+                if group.is_empty() {
+                    
+                }
+                println!("\n\n\n{}", group);
                 new_formula.push_str(&group);
                 
+            }
+            4..8 => {
+                let mut group: String = Default::default();
+                (*zero_cells, group) = create_4(zero_cells, kmap);
+                new_formula.push_str(&group);
             }
             _ => {break;}
         }
