@@ -729,10 +729,10 @@ fn check_current_cell(zero_cells: &Vec<Kmapzero>, row: usize, col: usize) -> boo
     false
 }
 
-fn create_8<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, kmap: [[bool;C];R]) -> (Vec<Kmapzero>, String){
+fn create_8<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, _kmap: [[bool;C];R]) -> (Vec<Kmapzero>, String){
     // check groups of 2 by 4 vertically and horizontally
     let mut new_zero_cells = zero_cells.clone();
-    let mut group: String = Default::default();
+    let mut group: String;
     let mut new_formula: String = Default::default();
     // let mut missing = C * R;
     for row in 0..R {
@@ -769,10 +769,10 @@ fn create_8<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, kmap: [[
     (new_zero_cells, new_formula)
 }
 
-fn create_4<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, kmap: [[bool;C];R]) -> (Vec<Kmapzero>, String){
+fn create_4<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, _kmap: [[bool;C];R]) -> (Vec<Kmapzero>, String){
     let mut new_zero_cells = zero_cells.clone();
-    let mut group: String = Default::default();
     let mut new_formula: String = Default::default();
+    let mut group: String;
 
     for row in 0..R {
         for col in 0..C {
@@ -787,11 +787,14 @@ fn create_4<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, kmap: [[
                     let current: HashSet<String> = it.split(";").map(|s| s.to_string()).collect();
                     common.retain(|c| current.contains(c));
                 }
+                let mut new_group: String = Default::default();
                 for x in common {
-                    if new_formula.is_empty(){ new_formula = x; }
-                    else{ new_formula = new_formula + "+" + &x; }
-                    
+                    println!("COMMON: {x:?}");
+                    if new_group.is_empty(){ new_group = new_group + "(" + &x; }
+                    else{ new_group = new_group + "+" + &x; }
                 }
+                new_group += ")";
+                new_formula += &new_group;
                 println!("CREATE_4: {group}");
             }
         }
@@ -804,30 +807,24 @@ fn grouping<const C: usize, const R: usize>(kmap: [[bool;C];R], zero_cells: &mut
     println!("Zero_cells: {:?}", zero_cells);
     // check first if group of 16, close if not check all 8, then if missing 4 then 2 and then 1
     let mut new_formula: String = Default::default();
-    while pending_false(zero_cells) {
-        match missing_trues(zero_cells){
-            16 => {
-                *zero_cells = create_16(zero_cells);
-                new_formula.push('0');
-            }
-            8..16 => {
-                let mut group: String = Default::default();
-                (*zero_cells, group) = create_8(zero_cells, kmap);
-                if group.is_empty() {
-                    
-                }
-                println!("\n\n\n{}", group);
-                new_formula.push_str(&group);
-                
-            }
-            4..8 => {
-                let mut group: String = Default::default();
-                (*zero_cells, group) = create_4(zero_cells, kmap);
-                new_formula.push_str(&group);
-            }
-            _ => {break;}
-        }
+    // while pending_false(zero_cells) {
+    if missing_trues(zero_cells) == 16 {
+        *zero_cells = create_16(zero_cells);
+        new_formula.push('0');
     }
+    if missing_trues(zero_cells) >= 8 {
+        let group: String;
+        (*zero_cells, group) = create_8(zero_cells, kmap);
+        // println!("\n\n\n{}", group);
+        new_formula.push_str(&group);
+    }
+    if missing_trues(zero_cells) >= 4 {
+        let group: String;
+        (*zero_cells, group) = create_4(zero_cells, kmap);
+        new_formula.push_str(&group);
+    }
+        // break;
+    // }
     if new_formula.is_empty() {
         new_formula = "1".to_string();
     }
@@ -880,7 +877,7 @@ fn karnaugh_map4(formula: &str, used_char: &mut Vec<char>) -> String{
 fn karnaugh_map3(formula: &str, used_char: &mut Vec<char>) -> String{
     let mut kmap = [[false; 4]; 2];
     let mut zero_cells:Vec<Kmapzero> = Vec::new();
-    let mut str_char: String = used_char.clone().into_iter().collect();
+    let mut str_char: String;
 
     
     used_char.sort();
@@ -920,7 +917,7 @@ fn karnaugh_map3(formula: &str, used_char: &mut Vec<char>) -> String{
 fn karnaugh_map2(formula: &str, used_char: &mut Vec<char>) -> String{
    let mut kmap = [[false; 2]; 2];
         let mut zero_cells:Vec<Kmapzero> = Vec::new();
-        let mut str_char: String = used_char.clone().into_iter().collect();
+        let mut str_char: String;
     
         
         used_char.sort();
