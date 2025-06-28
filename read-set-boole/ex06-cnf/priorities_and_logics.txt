@@ -1,0 +1,19 @@
+Priorities:
+Horizontally first then vertically
+
+
+
+
+
+Check before everything adjacent groups on false for example 2 gruops of 2
+[0][0][0][1]
+[0][1][1][1]
+[1][1][1][1]
+[1][1][1][1]
+
+the first zero will group with the one bellow and the second zero will group with the one in the right, according by my logic and code it would have created 3 groups of 2
+
+
+
+
+might have found a better logic, start by the end of the k-map
