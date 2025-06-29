@@ -147,46 +147,39 @@ fn give_value_to_char(current_line: i64, formula: &str, used_char: &[char]) -> N
         let pow = base.pow((n - i - 1) as u32);
         let val = (current_line / pow) % 2;
         changed_formula = changed_formula.replace(used_char[i], &val.to_string());
-        print!("| {val} ");
     }
 
     parse_formula(changed_formula.as_str())
 }
 
-fn print_and_resolve(used_char: &Vec<char>, formula: &str) {
-    for val in used_char {
-        print!("| {val} ");
-        
-    }
-    println!("| = |");
-    for _i in 0..=used_char.len(){
-        print!("|---");
-    }
-    println!("|");
+fn sat(formula: &str) -> bool{
+    let used_char = parse_formula_char(formula);
     let base = 2i64;
+    let mut sati:bool = false;
     let iterations = base.pow((used_char.len()) as u32);
     for i in 0..iterations {
-        let node = give_value_to_char(i, formula, used_char);
+        let node = give_value_to_char(i, formula, &used_char);
         let val = evaluate(&node);
         if val {
-            println!("| 1 |");
-        } else {
-            println!("| 0 |");
+            sati = true;
         }
     }
-    
+    sati
 }
-
-
-fn print_truth_table(formula: &str){
-    let used_char = parse_formula_char(formula);
-    print_and_resolve(&used_char, formula);
-}
-
 
 fn main() {
-    // let start = Instant::now();
-    print_truth_table("AB&C|DE&^FG|^HI&^");
-    // let duration = start.elapsed();
-    // println!("Took {:?}", duration);
+    println!("{}", sat("AB|"));
+    // true
+    println!("{}", sat("AB&"));
+    // true
+    println!("{}", sat("AA!&"));
+    // false
+    println!("{}", sat("AA^"));
+    // false
+}
+
+#[cfg(debug_assertions)]
+fn print_tree(formula: &str) {
+    let node = parse_formula(formula);
+    println!("{node:?}");
 }
