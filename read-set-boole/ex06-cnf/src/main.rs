@@ -602,14 +602,14 @@ fn check_left(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut u
         if it.row == row && it.col == col {
             it.grouped = true;
             group = it.form.clone() + " ";
-            println!("checked {it:?}");
+            // println!("checked {it:?}");
             let mut new_group = Default::default();
             if *amount != 0 {
                 *amount -= 1;
                 (new_zero_cells, new_group) = check_left(&new_zero_cells, row, next_col, amount, lenght);
             }
             if new_group.is_empty() && *amount != 0{
-                println!("banana");
+                // println!("banana");
                 break;
             }
             group = group + &new_group;
@@ -624,7 +624,7 @@ fn check_right(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut 
     let mut new_zero_cells = zero_cells.clone();
     let mut group: String = Default::default();
     let next_col = if col + 1 == lenght{0}else{col + 1};
-    println!("DAMN: {col} and {next_col} and {lenght}");
+    // println!("DAMN: {col} and {next_col} and {lenght}");
     if *amount == 0 {
         return (zero_cells.clone(), group)
     }
@@ -632,14 +632,14 @@ fn check_right(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut 
         if it.row == row && it.col == col {
             it.grouped = true;
             group = it.form.clone() + " ";
-            println!("checked {it:?}");
+            // println!("checked {it:?}");
             let mut new_group = Default::default();
             if *amount != 0 {
                 *amount -= 1;
                 (new_zero_cells, new_group) = check_right(&new_zero_cells, row, next_col, amount, lenght);
             }
             if new_group.is_empty() && *amount != 0{
-                println!("banana");
+                // println!("banana");
                 break;
             }
             group = group + &new_group;
@@ -713,8 +713,8 @@ fn check_vertically(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_inf
     if kmap_info.group_type == FourTwo  || kmap_info.group_type == TwoTwo{
         let mut new_amount = kmap_info.amount;
         let mut group: String = Default::default();
-        let (mut new_zero_cells, mut new_group) = check_up(zero_cells, row, col, &mut new_amount, kmap_info.amount);
-        if !new_group.is_empty() || new_amount != 0{
+        let (mut new_zero_cells, mut new_group) = check_up(zero_cells, row, col, &mut new_amount, kmap_info.rows);
+        if !new_group.is_empty() || new_amount == 0{
             group = group + &new_group;
             let next_col = if col == 0{kmap_info.cols - 1}else{col - 1};
             if kmap_info.group_type == FourTwo{
@@ -740,8 +740,10 @@ fn check_vertically(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_inf
         (new_zero_cells, group)
     } else {
         let mut group: String = Default::default();
-        let mut new_amount = kmap_info.cols;
-        let (new_zero_cells, new_group) = check_down(zero_cells, row, col, &mut new_amount, kmap_info.amount);
+        let mut new_amount = kmap_info.amount;
+        println!("KMAP AMOUNT: {}", kmap_info.amount);
+        let (new_zero_cells, new_group) = check_down(zero_cells, row, col, &mut new_amount, kmap_info.rows);
+        println!("KMAP AMOUNT: {}", kmap_info.amount);
         if !new_group.is_empty() && new_amount == 0{
             group = group + &new_group;
         }
@@ -764,8 +766,9 @@ fn check_horizontally(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_i
     if kmap_info.group_type == FourTwo  || kmap_info.group_type == TwoTwo{
         let mut new_amount = kmap_info.amount;
         let mut group: String = Default::default();
-        let (mut new_zero_cells, mut new_group) = check_left(zero_cells, row, col, &mut new_amount, kmap_info.amount);
-        if !new_group.is_empty() || new_amount != 0{
+        let (mut new_zero_cells, mut new_group) = check_left(zero_cells, row, col, &mut new_amount, kmap_info.cols);
+        println!("CHECK LEFT: {new_group:?}");
+        if !new_group.is_empty() || new_amount == 0{
             group = group + &new_group;
             let next_row = if row  == 0{kmap_info.rows - 1}else{row - 1};
             if kmap_info.group_type == FourTwo{
@@ -792,8 +795,10 @@ fn check_horizontally(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_i
         (new_zero_cells, group)
     } else {
         let mut group: String = Default::default();
-        let mut new_amount = kmap_info.cols;
-        let (new_zero_cells, new_group) = check_left(zero_cells, row, col, &mut new_amount, kmap_info.amount);
+        let mut new_amount = kmap_info.amount;
+        println!("{new_amount}");
+        let (new_zero_cells, new_group) = check_left(zero_cells, row, col, &mut new_amount, kmap_info.cols);
+        println!("CHECK LEFT: {new_group:?}\nAMOUNT: {new_amount}");
         if !new_group.is_empty() && new_amount == 0{
             group = group + &new_group;
         }
@@ -813,9 +818,14 @@ fn check_square(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_info: &
         let mut new_amount = kmap_info.amount;
         let mut group: String = Default::default();
         // need to check left first, TODO create check_left
-        let (mut new_zero_cells, mut new_group) = check_left(zero_cells, row, col, &mut new_amount, kmap_info.amount);
-        println!("CHECK: {new_group:?}");
-        if !new_group.is_empty() || new_amount != 0{
+        let (mut new_zero_cells, mut new_group) = check_left(zero_cells, row, col, &mut new_amount, kmap_info.cols);
+        println!("CHECK: {new_group:?}\nAmount: {new_amount}");
+        if new_group.is_empty() || new_amount != 0{
+            new_amount = kmap_info.amount;
+            (new_zero_cells, new_group) = check_right(zero_cells, row, col, &mut new_amount, kmap_info.cols);
+            println!("CHECK: {new_group:?}\nAmount: {new_amount}");
+        }
+        if !new_group.is_empty() || new_amount == 0{
             group = group + &new_group;
             let next_row = if row  == 0{kmap_info.rows - 1}else{row - 1};
             kmap_info.group_type = TwoOne;
@@ -839,7 +849,12 @@ fn check_square(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_info: &
     } else {
         let mut group: String = Default::default();
         let mut new_amount = kmap_info.amount;
-        let (new_zero_cells, new_group) = check_left(zero_cells, row, col, &mut new_amount, kmap_info.amount);
+        let (mut new_zero_cells, mut new_group) = check_left(zero_cells, row, col, &mut new_amount, kmap_info.cols);
+        if new_group.is_empty() || new_amount != 0 {
+            new_amount = kmap_info.amount;
+            (new_zero_cells, new_group) = check_right(zero_cells, row, col, &mut new_amount, kmap_info.cols)
+        }
+
         if !new_group.is_empty() && new_amount == 0{
             group = group + &new_group;
         }
@@ -869,10 +884,10 @@ fn create_8<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, _kmap: [
     let mut new_zero_cells = zero_cells.clone();
     let mut group: String;
     let mut new_formula: String = Default::default();
-    let mut kmap_info = KmapInfo{ rows: R, cols: C, group_type: FourTwo, amount: 4};
 
     for row in (0..R).rev() {
         for col in (0..C).rev() {
+            let mut kmap_info = KmapInfo{ rows: R, cols: C, group_type: FourTwo, amount: 4};
             if check_current_cell(&new_zero_cells, row, col) {
                 (new_zero_cells, group) = check_vertically(&new_zero_cells, row, col, &mut kmap_info); // need to had a new arg to the checks, because I need the info about the current kmap(columns and rows)
                 if group.is_empty(){
@@ -897,23 +912,28 @@ fn create_8<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, _kmap: [
 }
 
 // check vertically, then horizontally, and then square
+// need to check false group then all of them with the true maybe ill do it or not
 fn create_4<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, _kmap: [[bool;C];R]) -> (Vec<Kmapzero>, String){
     let mut new_zero_cells = zero_cells.clone();
     let mut new_formula: String = Default::default();
     let mut group: String;
-    let mut kmap_info = KmapInfo{ rows: R, cols: C, group_type: FourOne, amount: 4};
 
     for row in (0..R).rev() {
         for col in (0..C).rev() {
+            let mut kmap_info = KmapInfo{ rows: R, cols: C, group_type: FourOne, amount: 4};
             if check_current_cell(&new_zero_cells, row, col) {
-                // check group in a row
+                // check group in a collumn
                 (new_zero_cells, group) = check_vertically(&new_zero_cells, row, col, &mut kmap_info); // the last value will eventually be a CONST
-                println!("aFTER THE VERTICALLY: {group}");
+                println!("AFTER THE VERTICALLY: {group}");
                 
                 if group.is_empty(){
-                    // check group in a collumn 
+                    // check group in a row 
+                    println!("AMOUNT: {}", kmap_info.amount);
                     (new_zero_cells, group) = check_horizontally(&new_zero_cells, row, col, &mut kmap_info);
+                    println!("AFTER THE HORIZONTALLY: {group}");
                     if group.is_empty(){
+                        kmap_info.group_type = TwoTwo;
+                        kmap_info.amount = 2;
                         (new_zero_cells, group) = check_square(&new_zero_cells, row, col, &mut kmap_info);
                         println!("THERE IS A SQUARE: {group}");
                     }
