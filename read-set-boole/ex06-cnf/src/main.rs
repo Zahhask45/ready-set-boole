@@ -113,6 +113,7 @@ fn parse_formula(formula: &str) -> Node{
     tree.pop().unwrap()
 }
 
+#[allow(dead_code)]
 fn parse_formula_char(formula: &str) ->  Vec<char> {
     let mut tree: Vec<Node> = Vec::new();
     let mut used_char: Vec<char> = Vec::new();
@@ -427,19 +428,19 @@ fn do_all(node: Node) -> Node {
 
 
 fn conjunctive_normal_form(formula: &str) -> String{
-    let mut used_char = parse_formula_char(formula);
-    if used_char.len() >= 2 && used_char.len() <= 4 {
-        if used_char.len() == 4 {
-            println!("K-MAP: {}", karnaugh_map4(formula, &mut used_char));
-        }
-        if used_char.len() == 3 {
-            println!("K-MAP: {}", karnaugh_map3(formula, &mut used_char));
-        }
-        if used_char.len() == 2 {
-            println!("K-MAP: {}", karnaugh_map2(formula, &mut used_char));
-        }
-        
-    }
+    // let mut used_char = parse_formula_char(formula);
+    // if used_char.len() >= 2 && used_char.len() <= 4 {
+    //     if used_char.len() == 4 {
+    //         println!("K-MAP: {}", karnaugh_map4(formula, &mut used_char));
+    //     }
+    //     if used_char.len() == 3 {
+    //         println!("K-MAP: {}", karnaugh_map3(formula, &mut used_char));
+    //     }
+    //     if used_char.len() == 2 {
+    //         println!("K-MAP: {}", karnaugh_map2(formula, &mut used_char));
+    //     }
+    //     
+    // }
     let mut original = parse_formula(formula);
     let mut root = do_all(parse_formula(formula));
     while original != root {
@@ -452,25 +453,29 @@ fn conjunctive_normal_form(formula: &str) -> String{
 
 
 fn main() {
-    // println!("{}", conjunctive_normal_form("AB&!"));
-    // // A!B!|
-    // println!("{}", conjunctive_normal_form("AB|!"));
-    // // A!B!&
-    // println!("{}", conjunctive_normal_form("AB|C&"));
-    // // AB|C&
-    // println!("{}", conjunctive_normal_form("AB|C|D|"));
+    println!("{}", conjunctive_normal_form("AB&!"));
+    // A!B!|
+    println!("{}", conjunctive_normal_form("AB|!"));
+    // A!B!&
+    println!("{}", conjunctive_normal_form("AB|C&"));
+    // AB|C&
+    println!("{}", conjunctive_normal_form("AB|C|D|"));
     // ABCD|||
-    // println!("{}", conjunctive_normal_form("AB&C&D&"));
-    // println!("{}", conjunctive_normal_form("A!B&C&D&B&"));
-    // println!("{}", conjunctive_normal_form("BCD!A!&&&"));
-    // println!("{}", conjunctive_normal_form("AB|C!D|&"));
-    // println!("{}", conjunctive_normal_form("CD^A!A|&B!B|&"));
-    println!("{}", conjunctive_normal_form("AC|BC|AD|&&"));
+    println!("{}", conjunctive_normal_form("AB&!C!|"));
+    // A!B!C!||
+    println!("{}", conjunctive_normal_form("AB|!C!&"));
+    // A!B!C!&&
+    println!("{}", conjunctive_normal_form("AB&C&D&"));
+    println!("{}", conjunctive_normal_form("A!B&C&D&B&"));
+    println!("{}", conjunctive_normal_form("BCD!A!&&&"));
+    println!("{}", conjunctive_normal_form("AB|C!D|&"));
+    println!("{}", conjunctive_normal_form("CD^A!A|&B!B|&"));
+    println!("{}", conjunctive_normal_form("AC|BC|AD|BD|&&&"));
+    println!("{}", conjunctive_normal_form("AB|D|BC|D!|AC!|D|BC!|D|&&&"));
+    println!("{}", conjunctive_normal_form("ABCD|||"));
+    println!("{}", conjunctive_normal_form("B!C!|A!C|D!|ABCD|||&&"));
+    
     // ABCD&&&
-    // println!("{}", conjunctive_normal_form("AB&!C!|"));
-    // // A!B!C!||
-    // println!("{}", conjunctive_normal_form("AB|!C!&"));
-    // // A!B!C!&&
 
 }
 
@@ -512,7 +517,6 @@ fn operator_symbol(op: &Operator) -> &str {
 //=======================================================================================
 
 
-
 fn evaluate(node: &Node) -> bool {
     match node {
         Node::Bool(val) => *val,
@@ -539,6 +543,7 @@ fn evaluate(node: &Node) -> bool {
     }
 }
 
+#[allow(dead_code)]
 fn give_value_to_char(current_line: i64, formula: &str, used_char: &[char]) -> Node {
     let mut changed_formula: String = formula.to_string();
     let base: i64 = 2;
@@ -560,7 +565,7 @@ fn gray_code(n: u8) -> usize{
 }
 
 
-
+#[allow(dead_code)]
 fn pending_false(zero_cells: &Vec<Kmapzero>) -> bool {
     let mut pending = false;
     for it in zero_cells {
@@ -571,7 +576,7 @@ fn pending_false(zero_cells: &Vec<Kmapzero>) -> bool {
     pending
 }
 
-
+#[allow(dead_code)]
 fn missing_trues(zero_cells: &Vec<Kmapzero>) -> usize {
     let mut pending = 0usize;
     for it in zero_cells {
@@ -582,6 +587,7 @@ fn missing_trues(zero_cells: &Vec<Kmapzero>) -> usize {
     pending
 }
 
+#[allow(dead_code)]
 fn create_16(zero_cells: &Vec<Kmapzero>) -> Vec<Kmapzero> {
     let mut new_zero_cells = zero_cells.clone();
     for it in &mut new_zero_cells{
@@ -590,6 +596,7 @@ fn create_16(zero_cells: &Vec<Kmapzero>) -> Vec<Kmapzero> {
     new_zero_cells
 }
 
+#[allow(dead_code)]
 fn check_left(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut usize, lenght: usize) -> (Vec<Kmapzero>, String) {
     let mut new_zero_cells = zero_cells.clone();
     let mut group: String = Default::default();
@@ -620,6 +627,7 @@ fn check_left(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut u
     (zero_cells.clone(), group)
 }
 
+#[allow(dead_code)]
 fn check_right(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut usize, lenght: usize) -> (Vec<Kmapzero>, String) {
     let mut new_zero_cells = zero_cells.clone();
     let mut group: String = Default::default();
@@ -650,6 +658,7 @@ fn check_right(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut 
     (zero_cells.clone(), group)
 }
 
+#[allow(dead_code)]
 fn check_up(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut usize, lenght: usize) -> (Vec<Kmapzero>, String) {
     let mut new_zero_cells = zero_cells.clone();
     let mut group: String = Default::default();
@@ -667,8 +676,8 @@ fn check_up(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut usi
                 *amount -= 1;
                 (new_zero_cells, new_group) = check_up(&new_zero_cells, next_row, col, amount, lenght);
             }
-            if new_group.is_empty() && *amount != 0{
                 // println!("banana");
+            if new_group.is_empty() && *amount != 0{
                 break;
             }
             group = group + &new_group;
@@ -679,6 +688,7 @@ fn check_up(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut usi
     (zero_cells.clone(), group)
 }
 
+#[allow(dead_code)]
 fn check_down(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut usize, lenght: usize) -> (Vec<Kmapzero>, String) {
     let mut new_zero_cells = zero_cells.clone();
     let mut group: String = Default::default();
@@ -708,12 +718,21 @@ fn check_down(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, amount: &mut u
     (zero_cells.clone(), group)
 }
 
+#[allow(dead_code)]
 fn check_vertically(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_info: &mut KmapInfo) -> (Vec<Kmapzero>, String){
+    if kmap_info.cols == 4 {
+        return (zero_cells.clone(), "".to_string())
+    }
     // 4 BY 2
     if kmap_info.group_type == FourTwo  || kmap_info.group_type == TwoTwo{
         let mut new_amount = kmap_info.amount;
         let mut group: String = Default::default();
         let (mut new_zero_cells, mut new_group) = check_up(zero_cells, row, col, &mut new_amount, kmap_info.rows);
+        if new_group.is_empty() || new_amount != 0{
+            // println!("I NEED TO GO DOWN");
+            new_amount = kmap_info.amount;
+            (new_zero_cells, new_group) = check_down(zero_cells, row, col, &mut new_amount, kmap_info.rows);
+        }
         if !new_group.is_empty() || new_amount == 0{
             group = group + &new_group;
             let next_col = if col == 0{kmap_info.cols - 1}else{col - 1};
@@ -741,9 +760,13 @@ fn check_vertically(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_inf
     } else {
         let mut group: String = Default::default();
         let mut new_amount = kmap_info.amount;
-        println!("KMAP AMOUNT: {}", kmap_info.amount);
-        let (new_zero_cells, new_group) = check_down(zero_cells, row, col, &mut new_amount, kmap_info.rows);
-        println!("KMAP AMOUNT: {}", kmap_info.amount);
+        // println!("KMAP AMOUNT: {}", kmap_info.amount);
+        let (mut new_zero_cells, mut new_group) = check_up(zero_cells, row, col, &mut new_amount, kmap_info.rows);
+        if new_group.is_empty() || new_amount != 0{
+            // println!("I NEED TO GO DOWN");
+            new_amount = kmap_info.amount;
+            (new_zero_cells, new_group) = check_down(zero_cells, row, col, &mut new_amount, kmap_info.rows);
+        }
         if !new_group.is_empty() && new_amount == 0{
             group = group + &new_group;
         }
@@ -761,13 +784,18 @@ fn check_vertically(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_inf
 
 // 4 by 2 | 4 by 1 | 2 by 1 -> col by row
 // need to return updated zero_cells and the group that it made
+#[allow(dead_code)]
 fn check_horizontally(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_info: &mut KmapInfo) -> (Vec<Kmapzero>, String){
     // 4 BY 2
     if kmap_info.group_type == FourTwo  || kmap_info.group_type == TwoTwo{
         let mut new_amount = kmap_info.amount;
         let mut group: String = Default::default();
         let (mut new_zero_cells, mut new_group) = check_left(zero_cells, row, col, &mut new_amount, kmap_info.cols);
-        println!("CHECK LEFT: {new_group:?}");
+        if new_group.is_empty() || new_amount != 0{
+            new_amount = kmap_info.amount;
+            (new_zero_cells, new_group) = check_right(zero_cells, row, col, &mut new_amount, kmap_info.cols);
+        }
+        // println!("CHECK LEFT: {new_group:?}");
         if !new_group.is_empty() || new_amount == 0{
             group = group + &new_group;
             let next_row = if row  == 0{kmap_info.rows - 1}else{row - 1};
@@ -796,9 +824,13 @@ fn check_horizontally(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_i
     } else {
         let mut group: String = Default::default();
         let mut new_amount = kmap_info.amount;
-        println!("{new_amount}");
-        let (new_zero_cells, new_group) = check_left(zero_cells, row, col, &mut new_amount, kmap_info.cols);
-        println!("CHECK LEFT: {new_group:?}\nAMOUNT: {new_amount}");
+        // println!("{new_amount}");
+        let (mut new_zero_cells, mut new_group) = check_left(zero_cells, row, col, &mut new_amount, kmap_info.cols);
+        if new_group.is_empty() || new_amount != 0{
+            new_amount = kmap_info.amount;
+            (new_zero_cells, new_group) = check_right(zero_cells, row, col, &mut new_amount, kmap_info.cols);
+        }
+        // println!("CHECK LEFT: {new_group:?}\nAMOUNT: {new_amount}");
         if !new_group.is_empty() && new_amount == 0{
             group = group + &new_group;
         }
@@ -812,6 +844,7 @@ fn check_horizontally(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_i
 
 }
 
+#[allow(dead_code)]
 fn check_square(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_info: &mut KmapInfo) -> (Vec<Kmapzero>, String){
     // 2 BY 2
     if kmap_info.group_type == TwoTwo {
@@ -819,11 +852,11 @@ fn check_square(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_info: &
         let mut group: String = Default::default();
         // need to check left first, TODO create check_left
         let (mut new_zero_cells, mut new_group) = check_left(zero_cells, row, col, &mut new_amount, kmap_info.cols);
-        println!("CHECK: {new_group:?}\nAmount: {new_amount}");
+        // println!("CHECK: {new_group:?}\nAmount: {new_amount}");
         if new_group.is_empty() || new_amount != 0{
             new_amount = kmap_info.amount;
             (new_zero_cells, new_group) = check_right(zero_cells, row, col, &mut new_amount, kmap_info.cols);
-            println!("CHECK: {new_group:?}\nAmount: {new_amount}");
+            // println!("CHECK: {new_group:?}\nAmount: {new_amount}");
         }
         if !new_group.is_empty() || new_amount == 0{
             group = group + &new_group;
@@ -869,16 +902,18 @@ fn check_square(zero_cells: &Vec<Kmapzero>, row: usize, col: usize, kmap_info: &
     }
 }
 
+#[allow(dead_code)]
 fn check_current_cell(zero_cells: &Vec<Kmapzero>, row: usize, col: usize) -> bool{
     for it in zero_cells{
         if it.row == row && it.col == col && !it.grouped{
-            println!("{it:?}");
+            // println!("{it:?}");
             return true
         }
     }
     false
 }
 
+#[allow(dead_code)]
 fn create_8<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, _kmap: [[bool;C];R]) -> (Vec<Kmapzero>, String){
     // check groups of 2 by 4 vertically and horizontally
     let mut new_zero_cells = zero_cells.clone();
@@ -893,6 +928,7 @@ fn create_8<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, _kmap: [
                 if group.is_empty(){
                     (new_zero_cells, group) = check_horizontally(&new_zero_cells, row, col, &mut kmap_info);
                 }
+                if group.is_empty() {continue;}
                 let mut parts = group.trim().split(" ");
                 let mut common: HashSet<String> = parts.next().unwrap().split(";").map(|s| s.to_string()).collect();
                 for it in parts {
@@ -913,6 +949,7 @@ fn create_8<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, _kmap: [
 
 // check vertically, then horizontally, and then square
 // need to check false group then all of them with the true maybe ill do it or not
+#[allow(dead_code)]
 fn create_4<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, _kmap: [[bool;C];R]) -> (Vec<Kmapzero>, String){
     let mut new_zero_cells = zero_cells.clone();
     let mut new_formula: String = Default::default();
@@ -924,21 +961,21 @@ fn create_4<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, _kmap: [
             if check_current_cell(&new_zero_cells, row, col) {
                 // check group in a collumn
                 (new_zero_cells, group) = check_vertically(&new_zero_cells, row, col, &mut kmap_info); // the last value will eventually be a CONST
-                println!("AFTER THE VERTICALLY: {group}");
+                // println!("AFTER THE VERTICALLY: {group}");
                 
                 if group.is_empty(){
                     // check group in a row 
-                    println!("AMOUNT: {}", kmap_info.amount);
+                    // println!("AMOUNT: {}", kmap_info.amount);
                     (new_zero_cells, group) = check_horizontally(&new_zero_cells, row, col, &mut kmap_info);
-                    println!("AFTER THE HORIZONTALLY: {group}");
+                    // println!("AFTER THE HORIZONTALLY: {group}");
                     if group.is_empty(){
                         kmap_info.group_type = TwoTwo;
                         kmap_info.amount = 2;
                         (new_zero_cells, group) = check_square(&new_zero_cells, row, col, &mut kmap_info);
-                        println!("THERE IS A SQUARE: {group}");
+                        // println!("THERE IS A SQUARE: {group}");
                     }
                 }
-                
+                if group.is_empty() {continue;}
                 let mut parts = group.trim().split(" ");
                 let mut common: HashSet<String> = parts.next().unwrap().split(";").map(|s| s.to_string()).collect();
                 for it in parts {
@@ -947,23 +984,84 @@ fn create_4<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, _kmap: [
                 }
                 let mut new_group: String = Default::default();
                 for x in common {
-                    println!("COMMON: {x:?}");
+                    // println!("COMMON: {x:?}");
                     if new_group.is_empty(){ new_group = new_group + "(" + &x; }
                     else{ new_group = new_group + "+" + &x; }
                 }
                 new_group += ")";
                 new_formula += &new_group;
-                println!("CREATE_4: {group}");
+                // println!("CREATE_4: {group}");
             }
         }
     }
     (new_zero_cells, new_formula)
 }
 
+#[allow(dead_code)]
+fn create_2<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, _kmap: [[bool;C];R]) -> (Vec<Kmapzero>, String){
+    let mut new_zero_cells = zero_cells.clone();
+    let mut new_formula: String = Default::default();
+    let mut group: String = Default::default();
 
+    for row in (0..R).rev() {
+        for col in (0..C).rev() {
+            let mut kmap_info = KmapInfo{ rows: R, cols: C, group_type: TwoOne, amount: 2};
+            if check_current_cell(&new_zero_cells, row, col) {
+                // check group in a collumn
+                    (new_zero_cells, group) = check_vertically(&new_zero_cells, row, col, &mut kmap_info); // the last value will eventually be a CONST
+                // println!("AFTER THE VERTICALLY: {group}");
+                
+                if group.is_empty(){
+                    // check group in a row 
+                    // println!("AMOUNT: {}", kmap_info.amount);
+                    (new_zero_cells, group) = check_horizontally(&new_zero_cells, row, col, &mut kmap_info);
+                    // println!("AFTER THE HORIZONTALLY: {group}");
+                }
+                if group.is_empty() {continue;}
+                let mut parts = group.trim().split(" ");
+                let mut common: HashSet<String> = parts.next().unwrap().split(";").map(|s| s.to_string()).collect();
+                for it in parts {
+                    let current: HashSet<String> = it.split(";").map(|s| s.to_string()).collect();
+                    common.retain(|c| current.contains(c));
+                }
+                let mut new_group: String = Default::default();
+                for x in common {
+                    // println!("COMMON: {x:?}");
+                    if new_group.is_empty(){ new_group = new_group + "(" + &x; }
+                    else{ new_group = new_group + "+" + &x; }
+                }
+                new_group += ")";
+                new_formula += &new_group;
+                // println!("CREATE_2: {group}");
+            }
+        }
+    }
+    (new_zero_cells, new_formula)
+}
+
+#[allow(dead_code)]
+fn create_1<const C: usize, const R: usize>(zero_cells: &Vec<Kmapzero>, _kmap: [[bool;C];R]) -> (Vec<Kmapzero>, String){
+    let mut new_zero_cells = zero_cells.clone();
+    let mut new_formula: String = Default::default();
+    let mut group: String;
+
+    for iter in &mut new_zero_cells {
+        if !iter.grouped{
+            iter.grouped = true;
+            group = format!("({})", iter.form.replace(";", "+"));
+            new_formula += &group;
+        }
+
+        // println!("{iter:?}");
+    }
+    // println!("{new_formula}");
+    (new_zero_cells, new_formula)
+}
+
+#[allow(dead_code)]
 fn grouping<const C: usize, const R: usize>(kmap: [[bool;C];R], zero_cells: &mut Vec<Kmapzero>) -> String{
-    println!("{}", kmap.len());
-    println!("Zero_cells: {:?}", zero_cells);
+    // println!("{}", kmap.len());
+    // println!("Zero_cells: {:?}", zero_cells);
     // check first if group of 16, close if not check all 8, then if missing 4 then 2 and then 1
     let mut new_formula: String = Default::default();
     // while pending_false(zero_cells) {
@@ -971,15 +1069,27 @@ fn grouping<const C: usize, const R: usize>(kmap: [[bool;C];R], zero_cells: &mut
         *zero_cells = create_16(zero_cells);
         new_formula.push('0');
     }
-    if missing_trues(zero_cells) >= 8 {
+    if missing_trues(zero_cells) >= 1{
         let group: String;
         (*zero_cells, group) = create_8(zero_cells, kmap);
-        // println!("\n\n\n{}", group);
+        // println!("CREATE_8: {}", group);
         new_formula.push_str(&group);
     }
-    if missing_trues(zero_cells) >= 4 {
+    if missing_trues(zero_cells) >= 1{
         let group: String;
         (*zero_cells, group) = create_4(zero_cells, kmap);
+        // println!("CREATE_4: {}", group);
+        new_formula.push_str(&group);
+    }
+    if missing_trues(zero_cells) >= 1{
+        let group: String;
+        (*zero_cells, group) = create_2(zero_cells, kmap);
+        // println!("CREATE_2: {}", group);
+        new_formula.push_str(&group);
+    }
+    if missing_trues(zero_cells) >= 1{
+        let group: String;
+        (*zero_cells, group) = create_1(zero_cells, kmap);
         new_formula.push_str(&group);
     }
         // break;
@@ -992,6 +1102,7 @@ fn grouping<const C: usize, const R: usize>(kmap: [[bool;C];R], zero_cells: &mut
 
 
 // This will make the Karnaugh map and then I just need to sum the groups where there are 1(true) so we know that the others are 0(false)
+#[allow(dead_code)]
 fn karnaugh_map4(formula: &str, used_char: &mut Vec<char>) -> String{
     let mut kmap = [[false; 4]; 4];
     let mut zero_cells:Vec<Kmapzero> = Vec::new();
@@ -1006,7 +1117,7 @@ fn karnaugh_map4(formula: &str, used_char: &mut Vec<char>) -> String{
     for i in 0..iterations {
         let mut changed_formula = formula.to_string();
         str_char = used_char.iter().map(|c| c.to_string()).collect::<Vec<String>>().join(";");
-        println!("{str_char}");
+        // println!("{str_char}");
         for j in 0..used_char.len() {
             let bit = (used_char.len() - 1) - j;
             let a = (i >> bit) & 1 == 1;
@@ -1018,7 +1129,7 @@ fn karnaugh_map4(formula: &str, used_char: &mut Vec<char>) -> String{
         
         let row = gray_code((i / 4) as u8);
         let col = gray_code((i % 4) as u8);
-        println!("{row}                 {col}");
+        // println!("{row}                 {col}");
 
         
         // let node = give_value_to_char(i, formula, &used_char);
@@ -1028,15 +1139,18 @@ fn karnaugh_map4(formula: &str, used_char: &mut Vec<char>) -> String{
             zero_cells.push(Kmapzero {row, col, grouped: false, form: str_char.clone()});
         }
     }
-    print_kmap(kmap);
-    grouping(kmap, &mut zero_cells)
+    // print_kmap(kmap);
+    convert_group_rpn(grouping(kmap, &mut zero_cells))
+    // grouping(kmap, &mut zero_cells)
 }
 
 // This will make the Karnaugh map and then I just need to sum the groups where there are 1(true) so we know that the others are 0(false)
+#[allow(dead_code)]
 fn karnaugh_map3(formula: &str, used_char: &mut Vec<char>) -> String{
     let mut kmap = [[false; 4]; 2];
     let mut zero_cells:Vec<Kmapzero> = Vec::new();
     let mut str_char: String;
+
 
     
     used_char.sort();
@@ -1045,7 +1159,8 @@ fn karnaugh_map3(formula: &str, used_char: &mut Vec<char>) -> String{
     let iterations = base.pow((used_char.len()) as u32);
     for i in 0..iterations {
         let mut changed_formula = formula.to_string();
-        str_char = used_char.clone().into_iter().collect();
+        str_char = used_char.iter().map(|c| c.to_string()).collect::<Vec<String>>().join(";");
+        // println!("{str_char}");
         for j in 0..used_char.len() {
             let bit = (used_char.len() - 1) - j;
             let a = (i >> bit) & 1 == 1;
@@ -1057,7 +1172,7 @@ fn karnaugh_map3(formula: &str, used_char: &mut Vec<char>) -> String{
         
         let row = gray_code((i / 4) as u8);
         let col = gray_code((i % 4) as u8);
-        println!("{row}                 {col}");
+        // println!("{row}                 {col}");
 
         
         // let node = give_value_to_char(i, formula, &used_char);
@@ -1067,52 +1182,56 @@ fn karnaugh_map3(formula: &str, used_char: &mut Vec<char>) -> String{
             zero_cells.push(Kmapzero {row, col, grouped: false, form: str_char.clone()});
         }
     }
-    print_kmap(kmap);
-    grouping(kmap, &mut zero_cells)
+    // print_kmap(kmap);
+    convert_group_rpn(grouping(kmap, &mut zero_cells))
+    // grouping(kmap, &mut zero_cells)
 }
-
 
 // This will make the Karnaugh map and then I just need to sum the groups where there are 1(true) so we know that the others are 0(false)
+#[allow(dead_code)]
 fn karnaugh_map2(formula: &str, used_char: &mut Vec<char>) -> String{
-   let mut kmap = [[false; 2]; 2];
-        let mut zero_cells:Vec<Kmapzero> = Vec::new();
-        let mut str_char: String;
+    let mut kmap = [[false; 2]; 2];
+    let mut zero_cells:Vec<Kmapzero> = Vec::new();
+    let mut str_char: String;
+
+
     
-        
-        used_char.sort();
-        // need to create conditin for when the used_char as more than 4 variables to exit (maybe put that in the main)
-        let base = 2i64;
-        let iterations = base.pow((used_char.len()) as u32);
-        for i in 0..iterations {
-            let mut changed_formula = formula.to_string();
-            str_char = used_char.clone().into_iter().collect();
-            for j in 0..used_char.len() {
-                let bit = (used_char.len() - 1) - j;
-                let a = (i >> bit) & 1 == 1;
-                changed_formula = changed_formula.replace(used_char[j], &(a as i8).to_string());
-                if a {
-                    str_char = str_char.replace(used_char[j], &format!("{}{}", used_char[j], '!'));
-                }
-            }
-            
-            let row = gray_code((i / 2) as u8);
-            let col = gray_code((i % 2) as u8);
-            println!("{row}                 {col}");
-    
-            
-            // let node = give_value_to_char(i, formula, &used_char);
-            let val = evaluate(&parse_formula_binary(&changed_formula));
-            kmap[row][col] = val;
-            if !kmap[row][col] {
-                zero_cells.push(Kmapzero {row, col, grouped: false, form: str_char.clone()});
+    used_char.sort();
+    // need to create conditin for when the used_char as more than 4 variables to exit (maybe put that in the main)
+    let base = 2i64;
+    let iterations = base.pow((used_char.len()) as u32);
+    for i in 0..iterations {
+        let mut changed_formula = formula.to_string();
+        str_char = used_char.iter().map(|c| c.to_string()).collect::<Vec<String>>().join(";");
+        // println!("{str_char}");
+        for j in 0..used_char.len() {
+            let bit = (used_char.len() - 1) - j;
+            let a = (i >> bit) & 1 == 1;
+            changed_formula = changed_formula.replace(used_char[j], &(a as i8).to_string());
+            if a {
+                str_char = str_char.replace(used_char[j], &format!("{}{}", used_char[j], '!'));
             }
         }
-        print_kmap(kmap);
-        grouping(kmap, &mut zero_cells)
+        
+        let row = gray_code((i / 2) as u8);
+        let col = gray_code((i % 2) as u8);
+        // println!("{row}                 {col}");
+
+        
+        // let node = give_value_to_char(i, formula, &used_char);
+        let val = evaluate(&parse_formula_binary(&changed_formula));
+        kmap[row][col] = val;
+        if !kmap[row][col] {
+            zero_cells.push(Kmapzero {row, col, grouped: false, form: str_char.clone()});
+        }
+    }
+    // print_kmap(kmap);
+    convert_group_rpn(grouping(kmap, &mut zero_cells))
+    // grouping(kmap, &mut zero_cells)
 }
 
 
-
+#[allow(dead_code)]
 fn parse_formula_binary(formula: &str) -> Node{
     let mut tree: Vec<Node> = Vec::new();
 
@@ -1154,6 +1273,35 @@ fn parse_formula_binary(formula: &str) -> Node{
     }
     assert!(tree.len() == 1, "Invalid postfix expression");
     tree.pop().unwrap()
+}
+
+#[allow(dead_code)]
+fn convert_group_rpn(group: String) -> String{
+    let mut rpn: String = Default::default();
+    let mut groups: Vec<String> = Vec::new();
+    let mut plus = 0usize;
+    let mut mini_group: String = Default::default();
+    for char in group.chars(){
+        if char == '('{continue;}
+        if char == ')'&& !mini_group.is_empty(){
+            mini_group += &"|".repeat(plus);
+            // println!("{mini_group}");
+            groups.push(mini_group);
+            mini_group = Default::default();
+            plus = 0;
+            continue;
+        }
+        if char == '+' {
+            plus += 1;
+            continue;
+        }
+        mini_group += &char.to_string();
+    }
+    // println!("{:?}", groups.len());
+    let products = groups.len() - 1;
+    rpn = groups.iter().map(|s| s.to_string()).collect();
+    rpn += &"&".repeat(products);
+    rpn
 }
 
 
