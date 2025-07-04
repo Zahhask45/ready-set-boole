@@ -21,7 +21,7 @@ fn calculate_interleaved(x: u16, y: u16) -> u64{
     let mut res: u64 = 0;
     let new_x: u64 = x as u64;
     let new_y: u64 = y as u64;
-    for i in 0..64 {
+    for i in 0..16 {
         let x_i = (new_x >> i) & 1;
         let y_i = (new_y >> i) & 1;
         res |= y_i << (2 * i);
